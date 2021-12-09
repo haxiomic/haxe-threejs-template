@@ -1,0 +1,7 @@
+{
+	"name": "three-toolkit",
+	"url": "https://github.com/haxiomic/three-toolkit",
+	"dependencies": {
+		"vector-math": ""
+	}
+}
