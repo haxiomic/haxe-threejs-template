@@ -1,0 +1,17 @@
+--main Main
+
+--class-path src
+--library three
+--library vector-math
+--library three-toolkit
+--library dat.gui
+
+--js bin/app.js
+
+--dce full
+-D analyzer-optimize
+
+-D js-es=6
+
+# this bundles three.js into the output (only required because we are using three.js)
+--cmd npx esbuild bin/app.js --bundle --outfile=bin/bundle.js --minify --sourcemap

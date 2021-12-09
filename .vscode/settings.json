@@ -1,0 +1,10 @@
+{
+	"triggerTaskOnSave.tasks": {
+		"haxe": [
+			"*.glsl",
+			"*.hx",
+			"*.hxml",
+		]
+	},
+	"triggerTaskOnSave.selectedTask": "haxe: active configuration",
+}
