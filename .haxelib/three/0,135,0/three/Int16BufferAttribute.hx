@@ -1,7 +1,7 @@
 package three;
 
 @:jsRequire("three", "Int16BufferAttribute") extern class Int16BufferAttribute extends BufferAttribute {
-	function new(array:ts.AnyOf4<Float, js.lib.ArrayLike<Float>, Iterable<Float>, js.lib.ArrayBuffer>, itemSize:Float, ?normalized:Bool);
+	function new(array:ts.AnyOf4<Float, js.lib.ArrayBuffer, js.lib.ArrayLike<Float>, Iterable<Float>>, itemSize:Float, ?normalized:Bool);
 	function onUpload(callback:() -> Void):Int16BufferAttribute;
 	function setUsage(usage:Usage):Int16BufferAttribute;
 	function clone():Int16BufferAttribute;

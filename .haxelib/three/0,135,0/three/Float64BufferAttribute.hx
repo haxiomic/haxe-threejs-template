@@ -1,7 +1,7 @@
 package three;
 
 @:jsRequire("three", "Float64BufferAttribute") extern class Float64BufferAttribute extends BufferAttribute {
-	function new(array:ts.AnyOf4<Float, js.lib.ArrayLike<Float>, Iterable<Float>, js.lib.ArrayBuffer>, itemSize:Float, ?normalized:Bool);
+	function new(array:ts.AnyOf4<Float, js.lib.ArrayBuffer, js.lib.ArrayLike<Float>, Iterable<Float>>, itemSize:Float, ?normalized:Bool);
 	function onUpload(callback:() -> Void):Float64BufferAttribute;
 	function setUsage(usage:Usage):Float64BufferAttribute;
 	function clone():Float64BufferAttribute;

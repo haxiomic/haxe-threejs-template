@@ -1,7 +1,7 @@
 package three;
 
 @:jsRequire("three", "Int32BufferAttribute") extern class Int32BufferAttribute extends BufferAttribute {
-	function new(array:ts.AnyOf4<Float, js.lib.ArrayLike<Float>, Iterable<Float>, js.lib.ArrayBuffer>, itemSize:Float, ?normalized:Bool);
+	function new(array:ts.AnyOf4<Float, js.lib.ArrayBuffer, js.lib.ArrayLike<Float>, Iterable<Float>>, itemSize:Float, ?normalized:Bool);
 	function onUpload(callback:() -> Void):Int32BufferAttribute;
 	function setUsage(usage:Usage):Int32BufferAttribute;
 	function clone():Int32BufferAttribute;

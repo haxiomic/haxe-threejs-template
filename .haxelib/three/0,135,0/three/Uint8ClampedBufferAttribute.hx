@@ -1,7 +1,7 @@
 package three;
 
 @:jsRequire("three", "Uint8ClampedBufferAttribute") extern class Uint8ClampedBufferAttribute extends BufferAttribute {
-	function new(array:ts.AnyOf4<Float, js.lib.ArrayLike<Float>, Iterable<Float>, js.lib.ArrayBuffer>, itemSize:Float, ?normalized:Bool);
+	function new(array:ts.AnyOf4<Float, js.lib.ArrayBuffer, js.lib.ArrayLike<Float>, Iterable<Float>>, itemSize:Float, ?normalized:Bool);
 	function onUpload(callback:() -> Void):Uint8ClampedBufferAttribute;
 	function setUsage(usage:Usage):Uint8ClampedBufferAttribute;
 	function clone():Uint8ClampedBufferAttribute;
