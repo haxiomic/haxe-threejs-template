@@ -26,7 +26,6 @@ class Object3DTools {
 	static public function iterateMeshes(obj: Object3D, cb: Mesh<BufferGeometry, Material> -> Void) {
 		if (Std.is(obj, Mesh)) cb(cast obj);
 		for (child in obj.children) {
-			if (Std.is(child, Mesh)) cb(cast child);
 			iterateMeshes(child, cb);
 		}
 	}
