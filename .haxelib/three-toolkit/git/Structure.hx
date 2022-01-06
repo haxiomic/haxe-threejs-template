@@ -1,5 +1,8 @@
+#if macro
+import haxe.macro.Type.ClassType;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+#end
 
 /**
 	Extend a structure with another
@@ -86,12 +89,25 @@ function copyFieldsAny(from: Any, to: Any) {
 	}
 }
 
-macro function copyFields(from: Expr, to: Expr) {
+macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String>}) {
 	var fieldNames = switch Context.followWithAbstracts(Context.typeof(from)) {
-		case TAnonymous(_.get() => anon): anon.fields.map(f -> f.name);
-		case TInst(_.get() => classType, _): classType.fields.get().map(f -> f.name);
+		case TAnonymous(_.get() => anon):
+			anon.fields.map(f -> f.name);
+		case TInst(_.get() => classType, _):
+			// filter accessible class variables and dynamic functions
+			getAllClassFields(classType)
+			.filter(f -> f.isPublic && switch f.kind {
+				case FMethod(MethDynamic): true;
+				case FVar(AccNormal | AccCall, _): true;
+				case FMethod(MethNormal | MethInline | MethMacro): false;
+				case FVar(_, _): false;
+			})
+			.map(f -> f.name);
 		default:
 			Context.fatalError('Can only copy from structures and classes', Context.currentPos());
+	}
+	if (options != null) {
+		fieldNames = fieldNames.filter(f -> !options.exclude.contains(f));
 	}
 	var exprs = [
 		for (name in fieldNames) {
@@ -127,6 +143,8 @@ macro function duplicate(structure: Expr) {
 	}
 }
 
+#if macro
+
 /**
 	Recursively unwraps Null<T> to T
 **/
@@ -143,3 +161,16 @@ private function unwrapNull(complexType: ComplexType) {
 			complexType;
 	}
 }
+
+/**
+ * Concatenates all fields including super types
+ * @param classType 
+ */
+private function getAllClassFields(classType: ClassType) {
+	var fields = if (classType.superClass != null) {
+		getAllClassFields(classType.superClass.t.get());
+	} else [];
+	return fields.concat(classType.fields.get());
+}
+
+#end

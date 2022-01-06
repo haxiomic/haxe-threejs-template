@@ -73,6 +73,7 @@ class EnvironmentMaterial extends ShaderMaterial {
 		final uMultiplier = new Uniform(new Color(1,1,1));
 
 		super({
+			name: 'BackgroundEnvironment',
 			uniforms: {
 				'envMap': uEnvMap,
 				'flipEnvMap': uFlipEnvMap,

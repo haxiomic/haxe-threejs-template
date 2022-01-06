@@ -18,6 +18,7 @@ class PbrPlanarReflector extends Reflector {
 	public var reflectorKernel: Float;
 	public var reflectorSigma: Float;
 	public var reflectorPOT: Bool;
+	public var reflectorMaterial(get, set): CustomPhysicalMaterial;
 
 	public function new(geometry: three.BufferGeometry, ?options: ReflectorOptions) {
 		var options = extend({
@@ -89,12 +90,14 @@ class PbrPlanarReflector extends Reflector {
 
 		// override material
 		var material = new CustomPhysicalMaterial(_originalMaterial.uniforms, {
+			name: 'PbrReflector',
 			fog: false,
 			roughness: 0,
-			color: new Color(0x0),
+			metalness: 0.25,
+			color: new Color(0xFFFFFF),
 			emissiveIntensity: 0,
+			flatShading: false,
 			vertexShader: '
-
 				#define STANDARD
 				varying vec3 vViewPosition;
 				#ifdef USE_TRANSMISSION
@@ -161,12 +164,12 @@ class PbrPlanarReflector extends Reflector {
 				#endif
 				#ifdef SPECULAR
 					uniform float specularIntensity;
-					uniform vec3 specularTint;
+					uniform vec3 specularColor;
 					#ifdef USE_SPECULARINTENSITYMAP
 						uniform sampler2D specularIntensityMap;
 					#endif
-					#ifdef USE_SPECULARTINTMAP
-						uniform sampler2D specularTintMap;
+					#ifdef USE_SPECULARCOLORMAP
+						uniform sampler2D specularColorMap;
 					#endif
 				#endif
 				#ifdef USE_CLEARCOAT
@@ -174,8 +177,14 @@ class PbrPlanarReflector extends Reflector {
 					uniform float clearcoatRoughness;
 				#endif
 				#ifdef USE_SHEEN
-					uniform vec3 sheenTint;
+					uniform vec3 sheenColor;
 					uniform float sheenRoughness;
+					#ifdef USE_SHEENCOLORMAP
+						uniform sampler2D sheenColorMap;
+					#endif
+					#ifdef USE_SHEENROUGHNESSMAP
+						uniform sampler2D sheenRoughnessMap;
+					#endif
 				#endif
 				varying vec3 vViewPosition;
 				#include <common>
@@ -261,15 +270,19 @@ class PbrPlanarReflector extends Reflector {
 					#include <lights_fragment_end>
 
 					#include <aomap_fragment>
+
 					vec3 totalDiffuse = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
 					vec3 totalSpecular = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
 					#include <transmission_fragment>
-					vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;
+
+					vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance ;
+
 					#ifdef USE_CLEARCOAT
 						float dotNVcc = saturate( dot( geometry.clearcoatNormal, geometry.viewDir ) );
 						vec3 Fcc = F_Schlick( material.clearcoatF0, material.clearcoatF90, dotNVcc );
 						outgoingLight = outgoingLight * ( 1.0 - clearcoat * Fcc ) + clearcoatSpecular * clearcoat;
 					#endif
+					
 					#include <output_fragment>
 					#include <tonemapping_fragment>
 					#include <encodings_fragment>
@@ -282,7 +295,12 @@ class PbrPlanarReflector extends Reflector {
 		material.uniforms = extendAny(material.uniforms, _originalMaterial.uniforms);
 
 		this.material = material;
+	}
 
+	inline function get_reflectorMaterial() return cast this.material;
+	inline function set_reflectorMaterial(v: CustomPhysicalMaterial) {
+		this.material = v;
+		return v;
 	}
 
 }

@@ -16,6 +16,8 @@ typedef CustomPhysicalMaterialParameters = ShaderMaterialParameters & MeshPhysic
 
 class CustomPhysicalMaterial extends ShaderMaterial {
 
+	@:keep public var flatShading: Bool;
+
 	@:keep public var color: Color;
 	@:keep public var roughness: Float;
 	@:keep public var metalness: Float;
@@ -80,9 +82,11 @@ class CustomPhysicalMaterial extends ShaderMaterial {
 	@:keep public var sheenTint: Color;
 	#else
 	@:keep public var sheenColor: Color;
+	@:keep public var sheenColorMap: Texture;
 	#end
 
 	@:keep public var sheenRoughness: Float;
+	@:keep public var sheenRoughnessMap: Texture;
 
 	@:keep public var transparency: Float;
 
@@ -112,6 +116,7 @@ class CustomPhysicalMaterial extends ShaderMaterial {
 	@:keep public var specularColorMap : Null<Texture>;
 	#end
 
+	// @:keep public final isMaterial: Bool;
 	@:keep public final isMeshPhysicalMaterial: Bool;
 	@:keep public final isInitialized: Bool;
 
@@ -130,6 +135,7 @@ class CustomPhysicalMaterial extends ShaderMaterial {
 			fog: true,
 		}, parameters != null ? parameters : {}));
 
+		this.flatShading = false;
 		this.color = new Color( 0xffffff ); // diffuse
 		this.roughness = 1.0;
 		this.metalness = 0.0;
@@ -173,8 +179,10 @@ class CustomPhysicalMaterial extends ShaderMaterial {
 		this.sheenTint = new Color(0x0);
 		#else
 		this.sheenColor = new Color(0x0);
+		this.sheenColorMap = null;
 		#end
 		this.sheenRoughness = 1.0;
+		this.sheenRoughnessMap = null;
 		this.transparency = 0.0;
 		this.transmission = 0.;
 		this.ior = 1.5;
