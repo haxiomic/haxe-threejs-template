@@ -4,7 +4,6 @@
 --library three
 --library vector-math
 --library three-toolkit
---library dat.gui
 
 --js bin/app.js
 
