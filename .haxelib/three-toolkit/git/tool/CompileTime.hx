@@ -1,12 +1,14 @@
 package tool;
 
 #if macro
-import haxe.io.Path;
-import sys.io.File;
-import haxe.macro.Context;
 import haxe.crypto.Base64;
+import haxe.io.Path;
+import haxe.macro.Context;
+import haxe.macro.Expr;
+import haxe.macro.ExprTools;
 import haxe.macro.MacroStringTools;
 import sys.FileSystem;
+import sys.io.File;
 #end
 
 class CompileTime {
@@ -47,6 +49,22 @@ class CompileTime {
 			}
 		}
 		return macro 'data:image/' + $v{mimeType} + ';base64,' + $v{Base64.encode(File.getBytes(resolvedPath))};
+	}
+
+	static public macro function getPathsInDirectory(directoryPath: String, ?matching: ExprOf<EReg>) {
+		var resolvedPath =  resolvePath(directoryPath);
+		var filenames = sys.FileSystem.readDirectory(resolvedPath);
+		var paths = filenames.map(filename -> Path.join([directoryPath, filename]));
+		
+		switch matching.expr {
+			case EConst(CIdent("null")): // no filtering
+			case EConst(CRegexp(reg, opt)):
+				var pattern = new EReg(reg, opt);
+				paths = paths.filter(path -> pattern.match(path));
+			default:
+				Context.error("\"matching\" must be a regex expression or null", matching.pos);
+		}
+		return macro $v{paths};
 	}
 
 	static public macro function haxeVersion() {

@@ -13,14 +13,16 @@ import tool.IBLGenerator;
 
 class EnvironmentManager {
 
-	public var environmentPath(default, null): Null<String> = null;
+	public var environmentPath(get, set): Null<String>;
+	var _environmentPath: Null<String> = null;
+
 	public final environmentSun: DirectionalLight;
 	public final environmentAmbient: AmbientLight;
 	final renderer: WebGLRenderer;
 	final scene: Scene;
 	final onEnvironmentLoaded: Texture -> Void;
 
-	public function new(renderer: WebGLRenderer, scene: Scene, ?onEnvironmentLoaded: (envMap: Texture) -> Void) {
+	public function new(renderer: WebGLRenderer, scene: Scene, ?path: String, ?onEnvironmentLoaded: (envMap: Texture) -> Void) {
 		this.renderer = renderer;
 		this.scene = scene;
 		this.onEnvironmentLoaded = onEnvironmentLoaded != null ? onEnvironmentLoaded : _ -> {};
@@ -36,6 +38,8 @@ class EnvironmentManager {
 		environmentAmbient = new AmbientLight(0x000000, 1);
 		environmentAmbient.visible = false;
 		scene.add(environmentAmbient);
+
+		setEnvironmentMapPath(path);
 	}
 
 	var _pmremRenderTarget: Null<WebGLRenderTarget>;
@@ -43,7 +47,7 @@ class EnvironmentManager {
 		if (path == environmentPath) return; // no change
 		if (onLoaded == null) onLoaded = (e) -> {};
 		if (onError == null) onError = (e) -> js.Browser.console.error(e);
-		environmentPath = path;
+		_environmentPath = path;
 
 		if (path != null) {
 			var ext = Path.extension(path);
@@ -96,6 +100,64 @@ class EnvironmentManager {
 			scene.environment.dispose();
 		}
 		scene.environment = texture;
+	}
+
+	public function downloadPmremEnvironmentMap() {
+		final document = js.Browser.document;
+		final renderTarget = this._pmremRenderTarget;
+		final environmentPath = this.environmentPath;
+		final imageKind = 'png';
+		if (renderTarget != null && environmentPath != null) {
+			var w = Std.int(renderTarget.width);
+			var h = Std.int(renderTarget.height);
+			var byteCount = Std.int(w*h*4);
+			var buffer = new js.lib.Uint8ClampedArray(byteCount);
+			renderer.readRenderTargetPixels(renderTarget, 0, 0, w, h, buffer);
+
+			var pngCanvas = document.createCanvasElement();
+			pngCanvas.width = w;
+			pngCanvas.height = h;
+			var ctx = pngCanvas.getContext2d();
+			var rgbaData = new js.html.ImageData(buffer, w, h);
+			ctx.putImageData(rgbaData, 0, 0);
+
+			var encodingName = switch renderTarget.texture.encoding {
+				case RGBDEncoding: 'rgbd';
+				case RGBEEncoding: 'rgbe';
+				case RGBM16Encoding: 'rgbm17';
+				case RGBM7Encoding: 'rgbm7';
+				default: null;
+			}
+
+			var filename = haxe.io.Path.withoutDirectory(haxe.io.Path.withoutExtension(environmentPath)) + (encodingName != null ? '.$encodingName' : '') + '.$imageKind';
+
+			pngCanvas.toBlob((blob) -> {
+				// trigger download
+				var a = document.createAnchorElement();
+				document.body.appendChild(a);
+				a.style.display = 'none';
+				var url = js.html.URL.createObjectURL(blob);
+				a.href = url;
+				a.download = filename;
+				a.click();
+				js.html.URL.revokeObjectURL(url);
+			}, 'image/$imageKind', 1);
+
+			// document.body.appendChild(pngCanvas);
+			// pngCanvas.style.position = 'absolute';
+			// pngCanvas.style.zIndex = '1000';
+		} else {
+			trace('No environment map');
+		}
+	}
+
+	function set_environmentPath(v: String) {
+		setEnvironmentMapPath(v);
+		return v;
+	}
+
+	function get_environmentPath() {
+		return _environmentPath;
 	}
 
 }
