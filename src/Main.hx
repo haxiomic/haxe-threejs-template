@@ -1,15 +1,18 @@
-import environment.EnvironmentManager;
+import ui.DevUI;
+import tool.CompileTime;
 import VectorMath;
 import app.InteractionEventsManager;
+import environment.EnvironmentManager;
 import js.Browser.*;
 import rendering.BackgroundEnvironment;
 import rendering.FragmentRenderer;
 import rendering.PostProcess;
 import rendering.RenderTargetStore;
+import three.Mesh;
+import three.MeshPhysicalMaterial;
 import three.Scene;
+import three.TorusKnotGeometry;
 import three.Uniform;
-import tool.LightingDebugProbes;
-
 
 // settings
 var pixelRatio = min(window.devicePixelRatio, 2);
@@ -66,28 +69,37 @@ final postProcess = new PostProcess(renderer);
 
 final background = new BackgroundEnvironment();
 
-final environmentManager = new EnvironmentManager(renderer, scene, (env) -> {});
+final environmentManager = new EnvironmentManager(renderer, scene, 'assets/env/birchwood_2k.rgbd.png', (env) -> {});
 
 var renderTargetParametersNeedUpdate = false;
+
+@:keep var devUI = initDevUI();
 
 function main() {
 	document.body.appendChild(canvas);
 
-	environmentManager.setEnvironmentMapPath('assets/env/snowy_forest_path_01_1k.rgbd.png');
-
+	// create scene
+	// load a hdr environment texture and add the background object
 	scene.add(background);
-	scene.add(new LightingDebugProbes());
 
+	// create some scene assets
+	var torusKnotMesh = new Mesh(
+		new TorusKnotGeometry(0.4, 0.1, 200, 50, 2, 4),
+		new MeshPhysicalMaterial({
+			roughness: 0.4,
+			metalness: 1.0,
+			color: 0x258c6e,
+			clearcoat: 1.0,
+			side: FrontSide
+		})
+	);
+	torusKnotMesh.position.x = -1;
+	scene.add(torusKnotMesh);
+
+	devUI.add(torusKnotMesh.material);
+
+	// begin frame loop
 	animationFrame(window.performance.now());
-
-	// developer code
-	#if dev
-	GUI.init();
-	untyped window.renderer = renderer;
-	untyped window.THREE = Three;
-	untyped window.camera = camera;
-	untyped window.scene = scene;
-	#end
 }
 
 private var animationFrame_lastTime_ms = -1.0;
@@ -102,7 +114,7 @@ function animationFrame(time_ms: Float) {
 
 	var gl = renderer.getContext();
 
-	// Rendering Pipeline
+	// handle resize
 	{
 		var targetSize = floor(vec2(window.innerWidth, window.innerHeight) * pixelRatio);
 			
@@ -121,6 +133,7 @@ function animationFrame(time_ms: Float) {
 		}
 	}
 
+	// update world state for this frame
 	update(time_s, dt_s);
 
 	// render to canvas	
@@ -137,4 +150,45 @@ function animationFrame(time_ms: Float) {
 function update(time_s: Float, dt_s: Float) {
 	arcBallControl.step(dt_s);
 	arcBallControl.applyToCamera(camera);
+}
+
+function initDevUI() {
+	var gui = new DevUI({
+		closed: false,
+	});
+
+	gui.domElement.style.userSelect = 'none';
+	gui.domElement.parentElement.style.zIndex = '1000';
+	
+	{	// Rendering pipeline
+		var g = gui.addFolder('Rendering');
+		g.add(pixelRatio, 0.1, 4).name('resolution');
+		g.add(camera.fov, 1, 200).onChange(_ -> camera.updateProjectionMatrix());
+
+		var renderer = renderer;
+		g.add(renderer.toneMapping).onChange(v -> {
+			// little three.js workaround: force shader rebuild
+			var outputEncoding = renderer.outputEncoding;
+			renderer.outputEncoding = null;
+			window.requestAnimationFrame(t -> renderer.outputEncoding = outputEncoding);
+		});
+
+		g.add(renderer.outputEncoding);
+		g.add(renderer.toneMappingExposure, 0, 4);
+		g.add(renderer.shadowMap.enabled).name('Shadows');
+		g.addDropdown(environmentManager.environmentPath, CompileTime.getPathsInDirectory('assets/env', ~/(\.rgbd\.png|\.hdr)$/igm));
+
+		g.addFunction(() -> environmentManager.downloadPmremEnvironmentMap()).name("Download Env .png");
+	}
+
+	{	// Controls
+		var g = gui.addFolder('Controls');
+		var c = arcBallControl;
+		g.add(c.dragSpeed, 0, 15);
+		g.add(c.zoomSpeed, 0, 20);
+		g.add(c.strength, 0, 1000);
+		g.add(c.damping, 0, 200);
+	}
+
+	return gui;
 }
