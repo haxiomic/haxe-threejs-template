@@ -16,6 +16,16 @@ import haxe.Constraints.Function;
  */
 class DevUI extends ExposedGUI {
 
+	public function new(options) {
+		super(options);
+		var styleEl = js.Browser.document.createStyleElement();
+		styleEl.innerHTML = '.dg .title {
+			overflow: hidden;
+			white-space: nowrap;
+		}';
+		js.Browser.document.head.appendChild(styleEl);
+	}
+
 	public var internal(get, null): GUI;
 	inline function get_internal() return cast this;
 
