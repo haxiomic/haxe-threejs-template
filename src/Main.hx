@@ -91,7 +91,6 @@ function main() {
 			side: FrontSide
 		})
 	);
-	torusKnotMesh.position.x = -1;
 	scene.add(torusKnotMesh);
 
 	devUI.add(torusKnotMesh.material);
