@@ -52,7 +52,7 @@ final eventManager = new InteractionEventsManager(canvas);
 
 final arcBallControl = new control.ArcBallControl({
 	interactionEventsManager: eventManager,
-	radius: 4.5,
+	radius: 3,
 	dragSpeed: 4.,
 	zoomSpeed: 1.,
 });
@@ -77,6 +77,7 @@ function main() {
 	var torusKnotMesh = new Mesh(
 		new TorusKnotGeometry(0.4, 0.1, 200, 50, 2, 4),
 		new MeshPhysicalMaterial({
+			name: 'TorusKnot',
 			roughness: 0.4,
 			metalness: 1.0,
 			color: 0x258c6e,
@@ -96,8 +97,9 @@ function main() {
 	floor.reflectorMaterial.transparent = true;
 	floor.reflectorMaterial.opacity = 0.25;
 	scene.add(floor);
-	devUI.add(floor.reflectorResolution, 0, 1);
-	devUI.add(floor.reflectorKernel, 0, 0.1);
+	var floorUI = devUI.addFolder('Floor');
+	floorUI.add(floor.reflectorResolution, 0, 1);
+	floorUI.add(floor.reflectorKernel, 0, 0.1);
 
 	arcBallControl.target.y = 0.7;
 
