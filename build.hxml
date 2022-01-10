@@ -2,7 +2,6 @@
 
 --class-path src
 --library three
---library vector-math
 --library three-toolkit
 
 --js bin/app.js
