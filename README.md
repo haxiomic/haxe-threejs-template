@@ -1,4 +1,4 @@
-# Haxe Three.js starter project
+# Haxe + three.js starter project
 
 This is a batteries-include template project using three.js with the [haxe](https://haxe.org) language. [Main.hx](src/Main.hx) sets up a physically based rendering pipeline and some optimized HDR lighting environments are include in [assets/env](assets/env)
 
