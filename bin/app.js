@@ -1,32 +1,4 @@
 (function ($global) { "use strict";
-class EReg {
-	constructor(r,opt) {
-		this.r = new RegExp(r,opt.split("u").join(""));
-	}
-	match(s) {
-		if(this.r.global) {
-			this.r.lastIndex = 0;
-		}
-		this.r.m = this.r.exec(s);
-		this.r.s = s;
-		return this.r.m != null;
-	}
-	matched(n) {
-		if(this.r.m != null && n >= 0 && n < this.r.m.length) {
-			return this.r.m[n];
-		} else {
-			throw haxe_Exception.thrown("EReg::matched");
-		}
-	}
-	matchedRight() {
-		if(this.r.m == null) {
-			throw haxe_Exception.thrown("No string matched");
-		}
-		let sz = this.r.m.index + this.r.m[0].length;
-		return HxOverrides.substr(this.r.s,sz,this.r.s.length - sz);
-	}
-}
-EReg.__name__ = true;
 class HxOverrides {
 	static substr(s,pos,len) {
 		if(len == null) {
@@ -562,373 +534,6 @@ class ui_DevUI extends ui_ExposedGUI {
 	addFolder(name) {
 		return super.addFolder(name);
 	}
-	internalAddMaterial(material,fallbackName) {
-		let name = material.name == null || material.name == "" ? fallbackName : material.name;
-		while(Object.prototype.hasOwnProperty.call(this.__folders,name)) {
-			let endNumReg = new EReg("(\\d)+$","");
-			if(endNumReg.match(name)) {
-				let num = Std.parseInt(endNumReg.matched(1));
-				name = endNumReg.matchedRight() + Std.string(num + 1);
-			} else {
-				name += "2";
-			}
-		}
-		let g = this.addFolder(name);
-		let m = material;
-		let type = "Material";
-		let o = { };
-		Object.defineProperty(o,"visible",{ set : function(__value) {
-			m.visible = __value;
-		}, get : function() {
-			return m.visible;
-		}});
-		g.add(o,"visible").name("visible");
-		let o1 = { };
-		Object.defineProperty(o1,"transparent",{ set : function(__value) {
-			m.transparent = __value;
-		}, get : function() {
-			return m.transparent;
-		}});
-		g.add(o1,"transparent").name("transparent");
-		let o2 = { };
-		Object.defineProperty(o2,"opacity",{ set : function(__value) {
-			m.opacity = __value;
-		}, get : function() {
-			return m.opacity;
-		}});
-		let c = g.add(o2,"opacity").name("opacity");
-		c = c.min(0);
-		c = c.max(1);
-		let o3 = { };
-		Object.defineProperty(o3,"colorWrite",{ set : function(__value) {
-			m.colorWrite = __value;
-		}, get : function() {
-			return m.colorWrite;
-		}});
-		g.add(o3,"colorWrite").name("colorWrite");
-		let o4 = { };
-		Object.defineProperty(o4,"depthWrite",{ set : function(__value) {
-			m.depthWrite = __value;
-		}, get : function() {
-			return m.depthWrite;
-		}});
-		g.add(o4,"depthWrite").name("depthWrite");
-		let o5 = { };
-		Object.defineProperty(o5,"depthTest",{ set : function(__value) {
-			m.depthTest = __value;
-		}, get : function() {
-			return m.depthTest;
-		}});
-		g.add(o5,"depthTest").name("depthTest");
-		if(((m) instanceof three_MeshBasicMaterial)) {
-			let m1 = m;
-			let color = m1.color;
-			if(color == null) {
-				color = new three_Color();
-				m1.color = color;
-			}
-			g.addColor({ c : color.getHex()},"c").name("color").onChange(function(hex) {
-				return color.setHex(hex);
-			});
-		}
-		if(((m) instanceof three_MeshStandardMaterial) || ((m) instanceof material_CustomPhysicalMaterial)) {
-			type = "MeshStandardMaterial";
-			let m1 = m;
-			let o = { };
-			Object.defineProperty(o,"flatShading",{ set : function(__value) {
-				m1.flatShading = __value;
-			}, get : function() {
-				return m1.flatShading;
-			}});
-			g.add(o,"flatShading").name("flatShading").onChange(function(_) {
-				return m1.needsUpdate = true;
-			});
-			let o1 = { };
-			Object.defineProperty(o1,"roughness",{ set : function(__value) {
-				m1.roughness = __value;
-			}, get : function() {
-				return m1.roughness;
-			}});
-			let c = g.add(o1,"roughness").name("roughness");
-			c = c.min(0);
-			c = c.max(1);
-			let o2 = { };
-			Object.defineProperty(o2,"metalness",{ set : function(__value) {
-				m1.metalness = __value;
-			}, get : function() {
-				return m1.metalness;
-			}});
-			let c1 = g.add(o2,"metalness").name("metalness");
-			c1 = c1.min(0);
-			c1 = c1.max(1);
-			let o3 = { };
-			Object.defineProperty(o3,"emissiveIntensity",{ set : function(__value) {
-				m1.emissiveIntensity = __value;
-			}, get : function() {
-				return m1.emissiveIntensity;
-			}});
-			let c2 = g.add(o3,"emissiveIntensity").name("emissiveIntensity");
-			c2 = c2.min(0);
-			c2 = c2.max(20);
-			let color = m1.color;
-			if(color == null) {
-				color = new three_Color();
-				m1.color = color;
-			}
-			g.addColor({ c : color.getHex()},"c").name("color").onChange(function(hex) {
-				return color.setHex(hex);
-			});
-			let color1 = m1.emissive;
-			if(color1 == null) {
-				color1 = new three_Color();
-				m1.emissive = color1;
-			}
-			g.addColor({ c : color1.getHex()},"c").name("emissive").onChange(function(hex) {
-				return color1.setHex(hex);
-			});
-			let names = ["FrontSide","BackSide","DoubleSide"];
-			let values = [three_Side.FrontSide,three_Side.BackSide,three_Side.DoubleSide];
-			let obj = { };
-			let _g = 0;
-			let _g1 = names.length;
-			while(_g < _g1) {
-				let i = _g++;
-				obj[names[i]] = values[i];
-			}
-			let o4 = { };
-			Object.defineProperty(o4,"side",{ set : function(__strValue) {
-				let _g = 0;
-				while(_g < values.length) {
-					let value = values[_g];
-					++_g;
-					if(Std.string(value) == __strValue) {
-						m1.side = value;
-						break;
-					}
-				}
-			}, get : function() {
-				return m1.side;
-			}});
-			g.add(o4,"side",obj).name("side").onChange(function(_) {
-				return m1.needsUpdate = true;
-			});
-			let o5 = { };
-			Object.defineProperty(o5,"envMapIntensity",{ set : function(__value) {
-				m1.envMapIntensity = __value;
-			}, get : function() {
-				return m1.envMapIntensity;
-			}});
-			let c3 = g.add(o5,"envMapIntensity").name("envMapIntensity");
-			c3 = c3.min(0);
-			c3 = c3.max(4);
-			let o6 = { };
-			Object.defineProperty(o6,"aoMapIntensity",{ set : function(__value) {
-				m1.aoMapIntensity = __value;
-			}, get : function() {
-				return m1.aoMapIntensity;
-			}});
-			let c4 = g.add(o6,"aoMapIntensity").name("aoMapIntensity");
-			c4 = c4.min(0);
-			c4 = c4.max(4);
-		}
-		if(((m) instanceof three_MeshPhysicalMaterial)) {
-			type = "MeshPhysicalMaterial";
-			let m1 = m;
-			let o = { };
-			Object.defineProperty(o,"clearcoat",{ set : function(__value) {
-				m1.clearcoat = __value;
-			}, get : function() {
-				return m1.clearcoat;
-			}});
-			let c = g.add(o,"clearcoat").name("clearcoat");
-			c = c.min(0);
-			c = c.max(1);
-			let o1 = { };
-			Object.defineProperty(o1,"clearcoatRoughness",{ set : function(__value) {
-				m1.clearcoatRoughness = __value;
-			}, get : function() {
-				return m1.clearcoatRoughness;
-			}});
-			let c1 = g.add(o1,"clearcoatRoughness").name("clearcoatRoughness");
-			c1 = c1.min(0);
-			c1 = c1.max(1);
-			let o2 = { };
-			Object.defineProperty(o2,"transmission",{ set : function(__value) {
-				m1.transmission = __value;
-			}, get : function() {
-				return m1.transmission;
-			}});
-			let c2 = g.add(o2,"transmission").name("transmission");
-			c2 = c2.min(0);
-			c2 = c2.max(1);
-			let o3 = { };
-			Object.defineProperty(o3,"ior",{ set : function(__value) {
-				m1.ior = __value;
-			}, get : function() {
-				return m1.ior;
-			}});
-			let c3 = g.add(o3,"ior").name("ior");
-			c3 = c3.min(0);
-			c3 = c3.max(3);
-			let o4 = { };
-			Object.defineProperty(o4,"thickness",{ set : function(__value) {
-				m1.thickness = __value;
-			}, get : function() {
-				return m1.thickness;
-			}});
-			let c4 = g.add(o4,"thickness").name("thickness");
-			c4 = c4.min(0);
-			c4 = c4.max(3);
-			let color = m1.attenuationColor;
-			if(color == null) {
-				color = new three_Color();
-				m1.attenuationColor = color;
-			}
-			g.addColor({ c : color.getHex()},"c").name("attenuationColor").onChange(function(hex) {
-				return color.setHex(hex);
-			});
-			let o5 = { };
-			Object.defineProperty(o5,"attenuationDistance",{ set : function(__value) {
-				m1.attenuationDistance = __value;
-			}, get : function() {
-				return m1.attenuationDistance;
-			}});
-			let c5 = g.add(o5,"attenuationDistance").name("attenuationDistance");
-			c5 = c5.min(0);
-			c5 = c5.max(10);
-			let o6 = { };
-			Object.defineProperty(o6,"sheen",{ set : function(__value) {
-				m1.sheen = __value;
-			}, get : function() {
-				return m1.sheen;
-			}});
-			let c6 = g.add(o6,"sheen").name("sheen");
-			c6 = c6.min(0);
-			c6 = c6.max(1);
-			let o7 = { };
-			Object.defineProperty(o7,"sheenRoughness",{ set : function(__value) {
-				m1.sheenRoughness = __value;
-			}, get : function() {
-				return m1.sheenRoughness;
-			}});
-			let c7 = g.add(o7,"sheenRoughness").name("sheenRoughness");
-			c7 = c7.min(0);
-			c7 = c7.max(1);
-			let color1 = m1.sheenColor;
-			if(color1 == null) {
-				color1 = new three_Color();
-				m1.sheenColor = color1;
-			}
-			g.addColor({ c : color1.getHex()},"c").name("sheenColor").onChange(function(hex) {
-				return color1.setHex(hex);
-			});
-		} else if(((m) instanceof material_CustomPhysicalMaterial)) {
-			type = "CustomPhysicalMaterial";
-			let m1 = m;
-			let o = { };
-			Object.defineProperty(o,"clearcoat",{ set : function(__value) {
-				let v = __value;
-				if(m1.clearcoat > 0 != v > 0) {
-					m1.version++;
-				}
-				m1.clearcoat = v;
-			}, get : function() {
-				return m1.clearcoat;
-			}});
-			let c = g.add(o,"clearcoat").name("clearcoat");
-			c = c.min(0);
-			c = c.max(1);
-			let o1 = { };
-			Object.defineProperty(o1,"clearcoatRoughness",{ set : function(__value) {
-				m1.clearcoatRoughness = __value;
-			}, get : function() {
-				return m1.clearcoatRoughness;
-			}});
-			let c1 = g.add(o1,"clearcoatRoughness").name("clearcoatRoughness");
-			c1 = c1.min(0);
-			c1 = c1.max(1);
-			let o2 = { };
-			Object.defineProperty(o2,"transmission",{ set : function(__value) {
-				let v = __value;
-				if(m1.transmission > 0 != v > 0) {
-					m1.version++;
-				}
-				m1.transmission = v;
-			}, get : function() {
-				return m1.transmission;
-			}});
-			let c2 = g.add(o2,"transmission").name("transmission");
-			c2 = c2.min(0);
-			c2 = c2.max(1);
-			let o3 = { };
-			Object.defineProperty(o3,"ior",{ set : function(__value) {
-				m1.ior = __value;
-			}, get : function() {
-				return m1.ior;
-			}});
-			let c3 = g.add(o3,"ior").name("ior");
-			c3 = c3.min(0);
-			c3 = c3.max(3);
-			let o4 = { };
-			Object.defineProperty(o4,"thickness",{ set : function(__value) {
-				m1.thickness = __value;
-			}, get : function() {
-				return m1.thickness;
-			}});
-			let c4 = g.add(o4,"thickness").name("thickness");
-			c4 = c4.min(0);
-			c4 = c4.max(4);
-			let color = m1.attenuationColor;
-			if(color == null) {
-				color = new three_Color();
-				m1.attenuationColor = color;
-			}
-			g.addColor({ c : color.getHex()},"c").name("attenuationColor").onChange(function(hex) {
-				return color.setHex(hex);
-			});
-			let o5 = { };
-			Object.defineProperty(o5,"attenuationDistance",{ set : function(__value) {
-				m1.attenuationDistance = __value;
-			}, get : function() {
-				return m1.attenuationDistance;
-			}});
-			let c5 = g.add(o5,"attenuationDistance").name("attenuationDistance");
-			c5 = c5.min(0);
-			c5 = c5.max(10);
-			let o6 = { };
-			Object.defineProperty(o6,"sheen",{ set : function(__value) {
-				let v = __value;
-				if(m1.sheen > 0 != v > 0) {
-					m1.version++;
-				}
-				m1.sheen = v;
-			}, get : function() {
-				return m1.sheen;
-			}});
-			let c6 = g.add(o6,"sheen").name("sheen");
-			c6 = c6.min(0);
-			c6 = c6.max(1);
-			let o7 = { };
-			Object.defineProperty(o7,"sheenRoughness",{ set : function(__value) {
-				m1.sheenRoughness = __value;
-			}, get : function() {
-				return m1.sheenRoughness;
-			}});
-			let c7 = g.add(o7,"sheenRoughness").name("sheenRoughness");
-			c7 = c7.min(0);
-			c7 = c7.max(1);
-			let color1 = m1.sheenColor;
-			if(color1 == null) {
-				color1 = new three_Color();
-				m1.sheenColor = color1;
-			}
-			g.addColor({ c : color1.getHex()},"c").name("sheenColor").onChange(function(hex) {
-				return color1.setHex(hex);
-			});
-		}
-		g.name = "" + name + " :" + type;
-		return g;
-	}
 }
 ui_DevUI.__name__ = true;
 var three_WebGLRenderer = require("three").WebGLRenderer;
@@ -937,26 +542,6 @@ var three_ToneMapping = require("three");
 class Std {
 	static string(s) {
 		return js_Boot.__string_rec(s,"");
-	}
-	static parseInt(x) {
-		if(x != null) {
-			let _g = 0;
-			let _g1 = x.length;
-			while(_g < _g1) {
-				let i = _g++;
-				let c = x.charCodeAt(i);
-				if(c <= 8 || c >= 14 && c != 32 && c != 45) {
-					let nc = x.charCodeAt(i + 1);
-					let v = parseInt(x,nc == 120 || nc == 88 ? 16 : 10);
-					if(isNaN(v)) {
-						return null;
-					} else {
-						return v;
-					}
-				}
-			}
-		}
-		return null;
 	}
 }
 Std.__name__ = true;
@@ -1168,14 +753,14 @@ var three_AmbientLight = require("three").AmbientLight;
 function Main_main() {
 	window.document.body.appendChild(Main_canvas);
 	Main_scene.add(Main_background);
-	let torusKnotMesh = new three_Mesh(new three_TorusKnotGeometry(0.4,0.1,200,50,2,4),new three_MeshPhysicalMaterial({ name : "TorusKnot", roughness : 0.4, metalness : 1.0, color : 2460782, clearcoat : 1.0, side : three_Side.FrontSide}));
-	torusKnotMesh.position.y = 0.4;
-	Main_scene.add(torusKnotMesh);
-	Main_devUI.internalAddMaterial(torusKnotMesh.material,"material");
+	new three_examples_jsm_loaders_gltfloader_GLTFLoader().load(Main_haxeLogoDataUrl,function(gltf) {
+		gltf.scene.position.y = 1;
+		Main_scene.add(gltf.scene);
+	});
 	let floor = new objects_GlassReflectiveFloor(new three_PlaneGeometry(10,10));
 	floor.rotateX(-Math.PI * .5);
-	floor.reflectorResolution = 0.25;
-	floor.reflectorKernel = 0.028;
+	floor.reflectorResolution = 0.15;
+	floor.reflectorKernel = 0.075;
 	floor.material.transparent = true;
 	floor.material.opacity = 0.25;
 	Main_scene.add(floor);
@@ -1198,7 +783,7 @@ function Main_main() {
 	let c1 = floorUI.add(o1,"reflectorKernel").name("reflectorKernel");
 	c1 = c1.min(0);
 	c1 = c1.max(0.1);
-	Main_arcBallControl.target.y = 0.4;
+	Main_arcBallControl.target.y = 1.;
 	Main_animationFrame(window.performance.now());
 }
 function Main_animationFrame(time_ms) {
@@ -1646,35 +1231,6 @@ class app_event_WheelEvent {
 	}
 }
 app_event_WheelEvent.__name__ = true;
-class haxe_Exception extends Error {
-	constructor(message,previous,native) {
-		super(message);
-		this.message = message;
-		this.__previousException = previous;
-		this.__nativeException = native != null ? native : this;
-	}
-	get_native() {
-		return this.__nativeException;
-	}
-	static thrown(value) {
-		if(((value) instanceof haxe_Exception)) {
-			return value.get_native();
-		} else if(((value) instanceof Error)) {
-			return value;
-		} else {
-			let e = new haxe_ValueException(value);
-			return e;
-		}
-	}
-}
-haxe_Exception.__name__ = true;
-class haxe_ValueException extends haxe_Exception {
-	constructor(value,previous,native) {
-		super(String(value),previous,native);
-		this.value = value;
-	}
-}
-haxe_ValueException.__name__ = true;
 class haxe_ds_StringMap {
 	constructor() {
 		this.h = Object.create(null);
@@ -2161,20 +1717,17 @@ shaders_Blur1D.__name__ = true;
 var three_BlendingDstFactor = require("three");
 var three_BlendingEquation = require("three");
 var three_Mapping = require("three");
-var three_MeshBasicMaterial = require("three").MeshBasicMaterial;
-var three_MeshStandardMaterial = require("three").MeshStandardMaterial;
-var three_MeshPhysicalMaterial = require("three").MeshPhysicalMaterial;
 var three_NormalMapTypes = require("three");
 var three_PixelFormat = require("three");
 var three_PlaneGeometry = require("three").PlaneGeometry;
 var three_TextureDataType = require("three");
 var three_TextureFilter = require("three");
 var three_TextureLoader = require("three").TextureLoader;
-var three_TorusKnotGeometry = require("three").TorusKnotGeometry;
 var three_Vector2 = require("three").Vector2;
 var three_Vector4 = require("three").Vector4;
 var three_WebGLRenderTarget = require("three").WebGLRenderTarget;
 var three_WebGLMultisampleRenderTarget = require("three").WebGLMultisampleRenderTarget;
+var three_examples_jsm_loaders_gltfloader_GLTFLoader = require("three/examples/jsm/loaders/GLTFLoader").GLTFLoader;
 var three_examples_jsm_loaders_rgbeloader_RGBELoader = require("three/examples/jsm/loaders/RGBELoader").RGBELoader;
 var tool_PMREMGeneratorInternal = require("three").PMREMGenerator;
 class tool_IBLGenerator extends tool_PMREMGeneratorInternal {
@@ -2249,11 +1802,12 @@ var Main_renderer = (function($this) {
 }(this));
 var Main_scene = new three_Scene();
 var Main_eventManager = new app_InteractionEventsManager(Main_canvas);
-var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 1.5, dragSpeed : 4., zoomSpeed : 1.});
+var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 4., dragSpeed : 4., zoomSpeed : 1.});
 var Main_uTime_s = new three_Uniform(0.0);
 var Main_background = new rendering_BackgroundEnvironment();
-var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/birchwood_2k.rgbd.png",function(env) {
+var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/kiara_1_dawn_2k.rgbd.png",function(env) {
 });
+var Main_haxeLogoDataUrl = "data:model/gltf-binary;base64," + "Z2xURgIAAADMEgAAgAQAAEpTT057ImFzc2V0Ijp7ImdlbmVyYXRvciI6Iktocm9ub3MgZ2xURiBCbGVuZGVyIEkvTyB2MS43LjMzIiwidmVyc2lvbiI6IjIuMCJ9LCJzY2VuZSI6MCwic2NlbmVzIjpbeyJuYW1lIjoiU2NlbmUiLCJub2RlcyI6WzBdfV0sIm5vZGVzIjpbeyJtZXNoIjowLCJuYW1lIjoiSGF4ZSIsInJvdGF0aW9uIjpbLTAuNzA3MTA2ODI4Njg5NTc1MiwwLDAsMC43MDcxMDY4Mjg2ODk1NzUyXX1dLCJtYXRlcmlhbHMiOlt7ImRvdWJsZVNpZGVkIjp0cnVlLCJuYW1lIjoiTWF0ZXJpYWwiLCJwYnJNZXRhbGxpY1JvdWdobmVzcyI6eyJiYXNlQ29sb3JGYWN0b3IiOlswLjkyMTU4MjE2MjM4MDIxODUsMC4yNDIyODEwMDQ3ODY0OTE0LDAuMDEzNzAyMTE2OTA2NjQyOTE0LDFdLCJtZXRhbGxpY0ZhY3RvciI6MC44MDIyNzI3MzcwMjYyMTQ2LCJyb3VnaG5lc3NGYWN0b3IiOjAuMzk1NDU0NTU1NzQ5ODkzMn19XSwibWVzaGVzIjpbeyJuYW1lIjoiUGxhbmUiLCJwcmltaXRpdmVzIjpbeyJhdHRyaWJ1dGVzIjp7IlBPU0lUSU9OIjowLCJOT1JNQUwiOjEsIlRFWENPT1JEXzAiOjJ9LCJpbmRpY2VzIjozLCJtYXRlcmlhbCI6MH1dfV0sImFjY2Vzc29ycyI6W3siYnVmZmVyVmlldyI6MCwiY29tcG9uZW50VHlwZSI6NTEyNiwiY291bnQiOjEwNiwibWF4IjpbMSwwLjQwMjYwNTc0MjIxNjExMDIzLDFdLCJtaW4iOlstMSwtMC40MDI2MDU3NDIyMTYxMTAyMywtMV0sInR5cGUiOiJWRUMzIn0seyJidWZmZXJWaWV3IjoxLCJjb21wb25lbnRUeXBlIjo1MTI2LCJjb3VudCI6MTA2LCJ0eXBlIjoiVkVDMyJ9LHsiYnVmZmVyVmlldyI6MiwiY29tcG9uZW50VHlwZSI6NTEyNiwiY291bnQiOjEwNiwidHlwZSI6IlZFQzIifSx7ImJ1ZmZlclZpZXciOjMsImNvbXBvbmVudFR5cGUiOjUxMjMs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";
 var Main_renderTargetParametersNeedUpdate = false;
 var Main_devUI = Main_initDevUI();
 var Main_animationFrame_lastTime_ms = -1.0;
