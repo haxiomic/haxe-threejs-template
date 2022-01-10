@@ -52,7 +52,7 @@ final eventManager = new InteractionEventsManager(canvas);
 
 final arcBallControl = new control.ArcBallControl({
 	interactionEventsManager: eventManager,
-	radius: 3,
+	radius: 1.5,
 	dragSpeed: 4.,
 	zoomSpeed: 1.,
 });
@@ -101,7 +101,8 @@ function main() {
 	floorUI.add(floor.reflectorResolution, 0, 1);
 	floorUI.add(floor.reflectorKernel, 0, 0.1);
 
-	arcBallControl.target.y = 0.7;
+	// set camera look-at target
+	arcBallControl.target.y = 0.4;
 
 	// begin frame loop
 	animationFrame(window.performance.now());
