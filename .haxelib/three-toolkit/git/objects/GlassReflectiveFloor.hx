@@ -69,11 +69,15 @@ class GlassReflectiveFloor extends Reflector {
 
 			// force linear encoding when rendering reflection
 			var _previousEncoding = renderer.outputEncoding;
+			var _previousToneMapping = renderer.toneMapping;
+			var _previousExposure = renderer.toneMappingExposure;
 			renderer.outputEncoding = LinearEncoding;
 
 			_onBeforeRender(renderer, scene, camera, geometry, material, group);
 
 			renderer.outputEncoding = _previousEncoding;
+			renderer.toneMapping = _previousToneMapping;
+			renderer.toneMappingExposure = _previousExposure;
 
 			// blur
 			if (reflectorKernel > 0) {
