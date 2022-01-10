@@ -1,9 +1,5 @@
-import ui.DevUI;
-import tool.CompileTime;
-import VectorMath;
 import app.InteractionEventsManager;
 import environment.EnvironmentManager;
-import js.Browser.*;
 import rendering.BackgroundEnvironment;
 import rendering.FragmentRenderer;
 import rendering.PostProcess;
@@ -13,6 +9,8 @@ import three.MeshPhysicalMaterial;
 import three.Scene;
 import three.TorusKnotGeometry;
 import three.Uniform;
+import tool.CompileTime;
+import ui.DevUI;
 
 // settings
 var pixelRatio = min(window.devicePixelRatio, 2);
@@ -114,7 +112,7 @@ function animationFrame(time_ms: Float) {
 
 	var gl = renderer.getContext();
 
-	// handle resize
+	// handle if canvas has resized since the last frame
 	{
 		var targetSize = floor(vec2(window.innerWidth, window.innerHeight) * pixelRatio);
 			
@@ -176,6 +174,7 @@ function initDevUI() {
 		g.add(renderer.outputEncoding);
 		g.add(renderer.toneMappingExposure, 0, 4);
 		g.add(renderer.shadowMap.enabled).name('Shadows');
+		g.add(background.roughness, 0, 1);
 		g.addDropdown(environmentManager.environmentPath, CompileTime.getPathsInDirectory('assets/env', ~/(\.rgbd\.png|\.hdr)$/igm));
 
 		g.addFunction(() -> environmentManager.downloadPmremEnvironmentMap()).name("Download Env .png");
