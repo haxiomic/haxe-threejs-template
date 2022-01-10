@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "haxe build.hxml && live-server --watch=\"*.html,bin/bundle.js,assets\" .",
+    "start": "haxe build.hxml && dead-server --watch=\"*.html,bin/bundle.js,assets\" .",
     "externs": "dts2hx three three/examples/jsm/loaders/RGBELoader three/examples/jsm/loaders/GLTFLoader three/examples/jsm/objects/Reflector -m"
   },
   "keywords": [],
@@ -14,9 +14,9 @@
     "@types/dat.gui": "^0.7.7",
     "@types/three": "^0.135.0",
     "dat.gui": "^0.7.7",
+    "dead-server": "^1.0.4",
     "dts2hx": "^0.18.1",
     "esbuild": "^0.14.2",
-    "live-server": "^1.2.1",
     "three": "^0.135.0"
   }
 }
