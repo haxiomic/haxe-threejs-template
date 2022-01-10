@@ -6,9 +6,11 @@
 
 --js bin/app.js
 
+# optimization settings
 --dce full
 -D analyzer-optimize
 
+# generate ES6 output
 -D js-es=6
 
 # this bundles three.js into the output (only required because we are using three.js)
