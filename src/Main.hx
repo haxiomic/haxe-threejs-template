@@ -1,13 +1,10 @@
-import three.examples.jsm.loaders.gltfloader.GLTFLoader;
 import app.InteractionEventsManager;
 import environment.EnvironmentManager;
 import rendering.BackgroundEnvironment;
-import three.Mesh;
-import three.MeshPhysicalMaterial;
 import three.PlaneGeometry;
 import three.Scene;
-import three.TorusKnotGeometry;
 import three.Uniform;
+import three.examples.jsm.loaders.gltfloader.GLTFLoader;
 import tool.CompileTime;
 import ui.DevUI;
 
