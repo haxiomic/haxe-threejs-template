@@ -375,21 +375,18 @@ class control_ArcBallControl {
 				return 1;
 			});
 			options_interactionEventsManager.eventHandler.onPointerMoveCallbacks.push(function(e) {
-				let x = e.viewWidth;
-				let y = e.viewHeight;
+				let surfaceSize_x = e.viewWidth;
+				let surfaceSize_y = e.viewHeight;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / y - a.y / y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let v_x = 0;
-					let v_y = 1;
-					let v_z = 0;
-					let x1 = this1.x;
-					let y1 = this1.y;
-					let z = this1.z;
+					let u_x = this1.x;
+					let u_y = this1.y;
+					let u_z = this1.z;
 					let s = this1.w;
-					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * _gthis.dragSpeed * (x / y);
+					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
 					return 0;
 				} else {
 					return 1;
@@ -417,22 +414,19 @@ class control_ArcBallControl {
 				_gthis._isPointerDown = false;
 			});
 			window.addEventListener("mousemove",function(e) {
-				let x = interactionSurface.clientWidth;
-				let y = interactionSurface.clientHeight;
+				let surfaceSize_x = interactionSurface.clientWidth;
+				let surfaceSize_y = interactionSurface.clientHeight;
 				let tmp;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / y - a.y / y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let v_x = 0;
-					let v_y = 1;
-					let v_z = 0;
-					let x1 = this1.x;
-					let y1 = this1.y;
-					let z = this1.z;
+					let u_x = this1.x;
+					let u_y = this1.y;
+					let u_z = this1.z;
 					let s = this1.w;
-					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.clientX / x - a.x / x) * _gthis.dragSpeed * (x / y);
+					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.clientX / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
 					tmp = 0;
 				} else {
 					tmp = 1;
@@ -465,6 +459,21 @@ class control_ArcBallControl {
 	}
 }
 control_ArcBallControl.__name__ = true;
+class Vec2Data {
+	constructor(x,y) {
+		this.x = x;
+		this.y = y;
+	}
+}
+Vec2Data.__name__ = true;
+class Vec3Data {
+	constructor(x,y,z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+}
+Vec3Data.__name__ = true;
 Math.__name__ = true;
 var three_Mesh = require("three").Mesh;
 class rendering_BackgroundEnvironment extends three_Mesh {
@@ -834,31 +843,31 @@ function Main_update(time_s,dt_s) {
 	let denominator = lenSq == 0.0 ? 1.0 : Math.sqrt(lenSq);
 	let angle = _this.axialRotation.value;
 	let sa = Math.sin(angle * 0.5);
-	let x = v.x / denominator * sa;
-	let y = v.y / denominator * sa;
-	let z = v.z / denominator * sa;
-	let w = Math.cos(angle * 0.5);
+	let axial_x = v.x / denominator * sa;
+	let axial_y = v.y / denominator * sa;
+	let axial_z = v.z / denominator * sa;
+	let axial_w = Math.cos(angle * 0.5);
 	let angle1 = _this.angleAroundY.value;
 	let sa1 = Math.sin(angle1 * 0.5);
-	let x1 = 0 * sa1;
-	let y1 = 1 * sa1;
-	let z1 = 0 * sa1;
-	let w1 = Math.cos(angle1 * 0.5);
+	let aY_x = 0 * sa1;
+	let aY_y = 1 * sa1;
+	let aY_z = 0 * sa1;
+	let aY_w = Math.cos(angle1 * 0.5);
 	let angle2 = -_this.angleAroundXZ.value;
 	let sa2 = Math.sin(angle2 * 0.5);
-	let x2 = 1 * sa2;
-	let y2 = 0 * sa2;
-	let z2 = 0 * sa2;
-	let w2 = Math.cos(angle2 * 0.5);
-	let this11 = _this.orientation;
-	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
-	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
-	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
-	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
-	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
-	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
-	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
-	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
+	let aXZ_x = 1 * sa2;
+	let aXZ_y = 0 * sa2;
+	let aXZ_z = 0 * sa2;
+	let aXZ_w = Math.cos(angle2 * 0.5);
+	let this2 = _this.orientation;
+	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
+	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
+	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
+	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
+	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
+	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
+	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
+	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
 	Main_arcBallControl.applyToCamera(Main_camera);
 }
 function Main_initDevUI() {
@@ -963,17 +972,17 @@ function Main_initDevUI() {
 	let _this = options;
 	let result = new Array(_this.length);
 	let _g4 = 0;
-	let _g11 = _this.length;
-	while(_g4 < _g11) {
+	let _g5 = _this.length;
+	while(_g4 < _g5) {
 		let i = _g4++;
 		result[i] = Std.string(_this[i]);
 	}
 	let values2 = options;
 	let obj2 = { };
-	let _g5 = 0;
-	let _g6 = result.length;
-	while(_g5 < _g6) {
-		let i = _g5++;
+	let _g6 = 0;
+	let _g7 = result.length;
+	while(_g6 < _g7) {
+		let i = _g6++;
 		obj2[result[i]] = values2[i];
 	}
 	let o6 = { };
@@ -1094,21 +1103,6 @@ function Structure_extendAny(base,extendWidth) {
 	}
 	return extended;
 }
-class Vec2Data {
-	constructor(x,y) {
-		this.x = x;
-		this.y = y;
-	}
-}
-Vec2Data.__name__ = true;
-class Vec3Data {
-	constructor(x,y,z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-}
-Vec3Data.__name__ = true;
 class Vec4Data {
 	constructor(x,y,z,w) {
 		this.x = x;
@@ -1431,9 +1425,13 @@ class objects_GlassReflectiveFloor extends three_examples_jsm_objects_reflector_
 				reflectorRenderTarget.setSize(targetSize_x1,targetSize_y1);
 			}
 			let _previousEncoding = renderer.outputEncoding;
+			let _previousToneMapping = renderer.toneMapping;
+			let _previousExposure = renderer.toneMappingExposure;
 			renderer.outputEncoding = three_TextureEncoding.LinearEncoding;
 			_onBeforeRender(renderer,scene,camera,geometry,material,group);
 			renderer.outputEncoding = _previousEncoding;
+			renderer.toneMapping = _previousToneMapping;
+			renderer.toneMappingExposure = _previousExposure;
 			if(_gthis.reflectorKernel > 0) {
 				if(postProcess == null) {
 					postProcess = new rendering_PostProcess(renderer);
