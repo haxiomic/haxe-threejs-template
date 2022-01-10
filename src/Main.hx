@@ -1,11 +1,9 @@
 import app.InteractionEventsManager;
 import environment.EnvironmentManager;
 import rendering.BackgroundEnvironment;
-import rendering.FragmentRenderer;
-import rendering.PostProcess;
-import rendering.RenderTargetStore;
 import three.Mesh;
 import three.MeshPhysicalMaterial;
+import three.PlaneGeometry;
 import three.Scene;
 import three.TorusKnotGeometry;
 import three.Uniform;
@@ -61,12 +59,7 @@ final arcBallControl = new control.ArcBallControl({
 
 final uTime_s = new Uniform(0.0);
 
-final fragmentRenderer = new FragmentRenderer(renderer);
-final renderTargetStore = new RenderTargetStore(renderer);
-final postProcess = new PostProcess(renderer);
-
 final background = new BackgroundEnvironment();
-
 final environmentManager = new EnvironmentManager(renderer, scene, 'assets/env/birchwood_2k.rgbd.png', (env) -> {});
 
 var renderTargetParametersNeedUpdate = false;
@@ -91,9 +84,22 @@ function main() {
 			side: FrontSide
 		})
 	);
+	torusKnotMesh.position.y = 0.4;
 	scene.add(torusKnotMesh);
-
 	devUI.add(torusKnotMesh.material);
+
+	// nice reflective floor
+	var floor = new objects.GlassReflectiveFloor(new PlaneGeometry(10, 10));
+	floor.rotateX(-Math.PI * .5);
+	floor.reflectorResolution = 0.25;
+	floor.reflectorKernel = 0.028;
+	floor.reflectorMaterial.transparent = true;
+	floor.reflectorMaterial.opacity = 0.25;
+	scene.add(floor);
+	devUI.add(floor.reflectorResolution, 0, 1);
+	devUI.add(floor.reflectorKernel, 0, 0.1);
+
+	arcBallControl.target.y = 0.7;
 
 	// begin frame loop
 	animationFrame(window.performance.now());
