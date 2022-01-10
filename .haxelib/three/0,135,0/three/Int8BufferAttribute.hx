@@ -1,7 +1,7 @@
 package three;
 
 @:jsRequire("three", "Int8BufferAttribute") extern class Int8BufferAttribute extends BufferAttribute {
-	function new(array:ts.AnyOf4<Float, js.lib.ArrayBuffer, js.lib.ArrayLike<Float>, Iterable<Float>>, itemSize:Float, ?normalized:Bool);
+	function new(array:ts.AnyOf4<Float, js.lib.ArrayLike<Float>, Iterable<Float>, js.lib.ArrayBuffer>, itemSize:Float, ?normalized:Bool);
 	function onUpload(callback:() -> Void):Int8BufferAttribute;
 	function setUsage(usage:Usage):Int8BufferAttribute;
 	function clone():Int8BufferAttribute;

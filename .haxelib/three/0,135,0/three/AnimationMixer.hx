@@ -1,18 +1,18 @@
 package three;
 
 @:jsRequire("three", "AnimationMixer") extern class AnimationMixer extends EventDispatcher<Event> {
-	function new(root:ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>);
+	function new(root:ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>);
 	var time : Float;
 	var timeScale : Float;
-	function clipAction(clip:AnimationClip, ?root:ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>, ?blendMode:AnimationBlendMode):AnimationAction;
-	function existingAction(clip:AnimationClip, ?root:ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>):Null<AnimationAction>;
+	function clipAction(clip:AnimationClip, ?root:ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>, ?blendMode:AnimationBlendMode):AnimationAction;
+	function existingAction(clip:AnimationClip, ?root:ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>):Null<AnimationAction>;
 	function stopAllAction():AnimationMixer;
 	function update(deltaTime:Float):AnimationMixer;
 	function setTime(timeInSeconds:Float):AnimationMixer;
-	function getRoot():ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>;
+	function getRoot():ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>;
 	function uncacheClip(clip:AnimationClip):Void;
-	function uncacheRoot(root:ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>):Void;
-	function uncacheAction(clip:AnimationClip, ?root:ts.AnyOf2<AnimationObjectGroup, Object3D<Event>>):Void;
+	function uncacheRoot(root:ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>):Void;
+	function uncacheAction(clip:AnimationClip, ?root:ts.AnyOf2<Object3D<Event>, AnimationObjectGroup>):Void;
 	/**
 		Adds a listener to an event type.
 	**/
