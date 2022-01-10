@@ -21,7 +21,7 @@ I recommend installing the [trigger task on save](https://marketplace.visualstud
 
 ## Project Overview
 
-We can interact with three.js through externs generated from the typescript type definitions using the [dts2hx](https://github.com/haxiomic/dts2hx) tool. The generated externs are include in this repository in the [.haxelib](.haxelib/) directory. To regenerate these files you can call `npm run externs`
+We can interact with three.js through externs generated from the typescript type definitions using the [dts2hx](https://github.com/haxiomic/dts2hx) tool. The generated externs are included in this repository in the [.haxelib](.haxelib/) directory. To regenerate these files you can call `npm run externs`
 
 three.js is included as a module by using `require()`, since browsers don't have `require` we use a bundler ([esbuild](https://github.com/evanw/esbuild)) so we generate a single file – this is called by [build.hxml](build.hxml). Alternatively we could have used three.js globally via a script tag if we generated the externs with [`--global`](https://github.com/haxiomic/dts2hx#faq)
 
