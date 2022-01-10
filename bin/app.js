@@ -403,18 +403,21 @@ class control_ArcBallControl {
 				return 1;
 			});
 			options_interactionEventsManager.eventHandler.onPointerMoveCallbacks.push(function(e) {
-				let surfaceSize_x = e.viewWidth;
-				let surfaceSize_y = e.viewHeight;
+				let x = e.viewWidth;
+				let y = e.viewHeight;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / y - a.y / y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let u_x = this1.x;
-					let u_y = this1.y;
-					let u_z = this1.z;
+					let v_x = 0;
+					let v_y = 1;
+					let v_z = 0;
+					let x1 = this1.x;
+					let y1 = this1.y;
+					let z = this1.z;
 					let s = this1.w;
-					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
+					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * _gthis.dragSpeed * (x / y);
 					return 0;
 				} else {
 					return 1;
@@ -442,19 +445,22 @@ class control_ArcBallControl {
 				_gthis._isPointerDown = false;
 			});
 			window.addEventListener("mousemove",function(e) {
-				let surfaceSize_x = interactionSurface.clientWidth;
-				let surfaceSize_y = interactionSurface.clientHeight;
+				let x = interactionSurface.clientWidth;
+				let y = interactionSurface.clientHeight;
 				let tmp;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / y - a.y / y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let u_x = this1.x;
-					let u_y = this1.y;
-					let u_z = this1.z;
+					let v_x = 0;
+					let v_y = 1;
+					let v_z = 0;
+					let x1 = this1.x;
+					let y1 = this1.y;
+					let z = this1.z;
 					let s = this1.w;
-					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.clientX / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
+					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.clientX / x - a.x / x) * _gthis.dragSpeed * (x / y);
 					tmp = 0;
 				} else {
 					tmp = 1;
@@ -550,7 +556,7 @@ class ui_DevUI extends ui_ExposedGUI {
 	constructor(options) {
 		super(options);
 		let styleEl = window.document.createElement("style");
-		styleEl.innerHTML = ".dg .title {\n\t\t\toverflow: hidden;\n\t\t\twhite-space: nowrap;\n\t\t}";
+		styleEl.innerHTML = "\n\t\t.dg .title {\n\t\t\toverflow: hidden;\n\t\t\twhite-space: nowrap;\n\t\t}\n\t\t/** allow function buttons to use all space **/\n\t\t.dg .function .property-name {\n\t\t\twidth: auto;\n\t\t\twhite-space: nowrap;\n\t\t}\n\t\t";
 		window.document.head.appendChild(styleEl);
 	}
 	addFolder(name) {
@@ -687,11 +693,19 @@ class ui_DevUI extends ui_ExposedGUI {
 			let _g1 = names.length;
 			while(_g < _g1) {
 				let i = _g++;
-				obj[names[i]] = i;
+				obj[names[i]] = values[i];
 			}
 			let o4 = { };
-			Object.defineProperty(o4,"side",{ set : function(__index) {
-				m1.side = values[__index | 0];
+			Object.defineProperty(o4,"side",{ set : function(__strValue) {
+				let _g = 0;
+				while(_g < values.length) {
+					let value = values[_g];
+					++_g;
+					if(Std.string(value) == __strValue) {
+						m1.side = value;
+						break;
+					}
+				}
 			}, get : function() {
 				return m1.side;
 			}});
@@ -1137,7 +1151,7 @@ class environment_EnvironmentManager {
 				URL.revokeObjectURL(url);
 			},"image/" + "png",1);
 		} else {
-			console.log("environment/EnvironmentManager.hx:150:","No environment map");
+			window.alert("First load a .hdr environment file in order to download a pre-processed version");
 		}
 	}
 	set_environmentPath(v) {
@@ -1154,7 +1168,7 @@ var three_AmbientLight = require("three").AmbientLight;
 function Main_main() {
 	window.document.body.appendChild(Main_canvas);
 	Main_scene.add(Main_background);
-	let torusKnotMesh = new three_Mesh(new three_TorusKnotGeometry(0.4,0.1,200,50,2,4),new three_MeshPhysicalMaterial({ roughness : 0.4, metalness : 1.0, color : 2460782, clearcoat : 1.0, side : three_Side.FrontSide}));
+	let torusKnotMesh = new three_Mesh(new three_TorusKnotGeometry(0.4,0.1,200,50,2,4),new three_MeshPhysicalMaterial({ name : "TorusKnot", roughness : 0.4, metalness : 1.0, color : 2460782, clearcoat : 1.0, side : three_Side.FrontSide}));
 	torusKnotMesh.position.y = 0.4;
 	Main_scene.add(torusKnotMesh);
 	Main_devUI.internalAddMaterial(torusKnotMesh.material,"material");
@@ -1165,13 +1179,14 @@ function Main_main() {
 	floor.material.transparent = true;
 	floor.material.opacity = 0.25;
 	Main_scene.add(floor);
+	let floorUI = Main_devUI.addFolder("Floor");
 	let o = { };
 	Object.defineProperty(o,"reflectorResolution",{ set : function(__value) {
 		floor.reflectorResolution = __value;
 	}, get : function() {
 		return floor.reflectorResolution;
 	}});
-	let c = Main_devUI.add(o,"reflectorResolution").name("reflectorResolution");
+	let c = floorUI.add(o,"reflectorResolution").name("reflectorResolution");
 	c = c.min(0);
 	c = c.max(1);
 	let o1 = { };
@@ -1180,7 +1195,7 @@ function Main_main() {
 	}, get : function() {
 		return floor.reflectorKernel;
 	}});
-	let c1 = Main_devUI.add(o1,"reflectorKernel").name("reflectorKernel");
+	let c1 = floorUI.add(o1,"reflectorKernel").name("reflectorKernel");
 	c1 = c1.min(0);
 	c1 = c1.max(0.1);
 	Main_arcBallControl.target.y = 0.7;
@@ -1250,15 +1265,15 @@ function Main_update(time_s,dt_s) {
 	let y2 = 0 * sa2;
 	let z2 = 0 * sa2;
 	let w2 = Math.cos(angle2 * 0.5);
-	let this2 = _this.orientation;
+	let this11 = _this.orientation;
 	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
 	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
 	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
 	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
-	this2.x = x * w3 + y * z3 - z * y3 + w * x3;
-	this2.y = -x * z3 + y * w3 + z * x3 + w * y3;
-	this2.z = x * y3 - y * x3 + z * w3 + w * z3;
-	this2.w = -x * x3 - y * y3 - z * z3 + w * w3;
+	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
+	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
+	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
+	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
 	Main_arcBallControl.applyToCamera(Main_camera);
 }
 function Main_initDevUI() {
@@ -1296,11 +1311,19 @@ function Main_initDevUI() {
 	let _g1 = names.length;
 	while(_g < _g1) {
 		let i = _g++;
-		obj[names[i]] = i;
+		obj[names[i]] = values[i];
 	}
 	let o2 = { };
-	Object.defineProperty(o2,"toneMapping",{ set : function(__index) {
-		renderer.toneMapping = values[__index | 0];
+	Object.defineProperty(o2,"toneMapping",{ set : function(__strValue) {
+		let _g = 0;
+		while(_g < values.length) {
+			let value = values[_g];
+			++_g;
+			if(Std.string(value) == __strValue) {
+				renderer.toneMapping = value;
+				break;
+			}
+		}
 	}, get : function() {
 		return renderer.toneMapping;
 	}});
@@ -1318,11 +1341,19 @@ function Main_initDevUI() {
 	let _g3 = names1.length;
 	while(_g2 < _g3) {
 		let i = _g2++;
-		obj1[names1[i]] = i;
+		obj1[names1[i]] = values1[i];
 	}
 	let o3 = { };
-	Object.defineProperty(o3,"outputEncoding",{ set : function(__index) {
-		renderer.outputEncoding = values1[__index | 0];
+	Object.defineProperty(o3,"outputEncoding",{ set : function(__strValue) {
+		let _g = 0;
+		while(_g < values1.length) {
+			let value = values1[_g];
+			++_g;
+			if(Std.string(value) == __strValue) {
+				renderer.outputEncoding = value;
+				break;
+			}
+		}
 	}, get : function() {
 		return renderer.outputEncoding;
 	}});
@@ -1343,15 +1374,6 @@ function Main_initDevUI() {
 		return renderer.shadowMap.enabled;
 	}});
 	g.add(o5,"enabled").name("enabled").name("Shadows");
-	let o6 = { };
-	Object.defineProperty(o6,"roughness",{ set : function(__value) {
-		Main_background.material.uRoughness.value = __value;
-	}, get : function() {
-		return Main_background.material.uRoughness.value;
-	}});
-	let c3 = g.add(o6,"roughness").name("roughness");
-	c3 = c3.min(0);
-	c3 = c3.max(1);
 	let options = ["assets/env/hilly_terrain_01_1k.rgbd.png","assets/env/snowy_park_01_1k.rgbd.png","assets/env/birchwood_2k.rgbd.png","assets/env/winter_lake_01_1k.rgbd.png","assets/env/snowy_forest_path_01_1k.rgbd.png","assets/env/night_bridge_2k.rgbd.png","assets/env/kiara_1_dawn_2k.rgbd.png","assets/env/venice_sunset_2k.rgbd.png","assets/env/blouberg_sunrise_1_2k.rgbd.png","assets/env/the_sky_is_on_fire_2k.rgbd.png"];
 	let _this = options;
 	let result = new Array(_this.length);
@@ -1367,18 +1389,36 @@ function Main_initDevUI() {
 	let _g6 = result.length;
 	while(_g5 < _g6) {
 		let i = _g5++;
-		obj2[result[i]] = i;
+		obj2[result[i]] = values2[i];
 	}
-	let o7 = { };
-	Object.defineProperty(o7,"environmentPath",{ set : function(__index) {
-		Main_environmentManager.set_environmentPath(values2[__index | 0]);
+	let o6 = { };
+	Object.defineProperty(o6,"environmentPath",{ set : function(__strValue) {
+		let _g = 0;
+		while(_g < values2.length) {
+			let value = values2[_g];
+			++_g;
+			if((value == null ? "null" : "" + value) == __strValue) {
+				Main_environmentManager.set_environmentPath(value);
+				break;
+			}
+		}
 	}, get : function() {
 		return Main_environmentManager.get_environmentPath();
 	}});
-	g.add(o7,"environmentPath",obj2).name("environmentPath");
+	g.add(o6,"environmentPath",obj2).name("environmentPath");
+	let o7 = { };
+	Object.defineProperty(o7,"roughness",{ set : function(__value) {
+		Main_background.material.uRoughness.value = __value;
+	}, get : function() {
+		return Main_background.material.uRoughness.value;
+	}});
+	let c3 = g.add(o7,"roughness").name("roughness");
+	c3 = c3.min(0);
+	c3 = c3.max(1);
+	c3.name("Background Blur");
 	g.add({ "fn" : function() {
 		Main_environmentManager.downloadPmremEnvironmentMap();
-	}},"fn").name("() -> environmentManager.downloadPmremEnvironmentMap()").name("Download Env .png");
+	}},"fn").name("() -> environmentManager.downloadPmremEnvironmentMap()").name("Download Processed HDR");
 	let g1 = gui.addFolder("Controls");
 	let c4 = Main_arcBallControl;
 	let o8 = { };
@@ -2209,7 +2249,7 @@ var Main_renderer = (function($this) {
 }(this));
 var Main_scene = new three_Scene();
 var Main_eventManager = new app_InteractionEventsManager(Main_canvas);
-var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 4.5, dragSpeed : 4., zoomSpeed : 1.});
+var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 3, dragSpeed : 4., zoomSpeed : 1.});
 var Main_uTime_s = new three_Uniform(0.0);
 var Main_background = new rendering_BackgroundEnvironment();
 var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/birchwood_2k.rgbd.png",function(env) {
