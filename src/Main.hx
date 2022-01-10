@@ -1,3 +1,4 @@
+import three.examples.jsm.loaders.gltfloader.GLTFLoader;
 import app.InteractionEventsManager;
 import environment.EnvironmentManager;
 import rendering.BackgroundEnvironment;
@@ -52,7 +53,7 @@ final eventManager = new InteractionEventsManager(canvas);
 
 final arcBallControl = new control.ArcBallControl({
 	interactionEventsManager: eventManager,
-	radius: 1.5,
+	radius: 4.,
 	dragSpeed: 4.,
 	zoomSpeed: 1.,
 });
@@ -60,7 +61,10 @@ final arcBallControl = new control.ArcBallControl({
 final uTime_s = new Uniform(0.0);
 
 final background = new BackgroundEnvironment();
-final environmentManager = new EnvironmentManager(renderer, scene, 'assets/env/birchwood_2k.rgbd.png', (env) -> {});
+final environmentManager = new EnvironmentManager(renderer, scene, 'assets/env/kiara_1_dawn_2k.rgbd.png', (env) -> {});
+
+// embed the glb model as a base64 string
+final haxeLogoDataUrl = 'data:model/gltf-binary;base64,' + CompileTime.embedBase64('haxe-logo.glb');
 
 var renderTargetParametersNeedUpdate = false;
 
@@ -73,27 +77,17 @@ function main() {
 	// load a hdr environment texture and add the background object
 	scene.add(background);
 
-	// create some scene assets
-	var torusKnotMesh = new Mesh(
-		new TorusKnotGeometry(0.4, 0.1, 200, 50, 2, 4),
-		new MeshPhysicalMaterial({
-			name: 'TorusKnot',
-			roughness: 0.4,
-			metalness: 1.0,
-			color: 0x258c6e,
-			clearcoat: 1.0,
-			side: FrontSide
-		})
-	);
-	torusKnotMesh.position.y = 0.4;
-	scene.add(torusKnotMesh);
-	devUI.add(torusKnotMesh.material);
+	// load our haxe logo glb file
+	new GLTFLoader().load(haxeLogoDataUrl, (gltf) -> {
+		gltf.scene.position.y = 1;
+		scene.add(gltf.scene);
+	});
 
 	// nice reflective floor
 	var floor = new objects.GlassReflectiveFloor(new PlaneGeometry(10, 10));
 	floor.rotateX(-Math.PI * .5);
-	floor.reflectorResolution = 0.25;
-	floor.reflectorKernel = 0.028;
+	floor.reflectorResolution = 0.15;
+	floor.reflectorKernel = 0.075;
 	floor.reflectorMaterial.transparent = true;
 	floor.reflectorMaterial.opacity = 0.25;
 	scene.add(floor);
@@ -102,7 +96,7 @@ function main() {
 	floorUI.add(floor.reflectorKernel, 0, 0.1);
 
 	// set camera look-at target
-	arcBallControl.target.y = 0.4;
+	arcBallControl.target.y = 1.;
 
 	// begin frame loop
 	animationFrame(window.performance.now());
