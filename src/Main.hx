@@ -181,10 +181,10 @@ function initDevUI() {
 		g.add(renderer.outputEncoding);
 		g.add(renderer.toneMappingExposure, 0, 4);
 		g.add(renderer.shadowMap.enabled).name('Shadows');
-		g.add(background.roughness, 0, 1);
 		g.addDropdown(environmentManager.environmentPath, CompileTime.getPathsInDirectory('assets/env', ~/(\.rgbd\.png|\.hdr)$/igm));
+		g.add(background.roughness, 0, 1).name('Background Blur');
 
-		g.addFunction(() -> environmentManager.downloadPmremEnvironmentMap()).name("Download Env .png");
+		g.addFunction(() -> environmentManager.downloadPmremEnvironmentMap()).name("Download Processed HDR");
 	}
 
 	{	// Controls
