@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "haxe build.hxml && live-server --watch=\"*.html,bin/bundle.js,assets\" .",
-    "externs": "dts2hx three three/examples/jsm/loaders/RGBELoader dat.gui -m"
+    "externs": "dts2hx three three/examples/jsm/loaders/RGBELoader -m"
   },
   "keywords": [],
   "author": "",
