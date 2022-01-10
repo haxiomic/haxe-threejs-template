@@ -82,13 +82,12 @@ function extendAny<T>(base: T, extendWidth: Any): T {
 	return cast extended;
 }
 
-function copyFieldsAny(from: Any, to: Any) {
-	var fieldNames = Reflect.fields(from);
-	for (name in fieldNames) {
-		Reflect.setField(to, name, Reflect.field(from, name));
-	}
-}
-
+/**
+ * Copy fields from a structure or class to any other instance
+ * @param from 
+ * @param to 
+ * @param options pass {excludes: [fields]} to exclude specific fields
+ */
 macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String>}) {
 	var fieldNames = switch Context.followWithAbstracts(Context.typeof(from)) {
 		case TAnonymous(_.get() => anon):
@@ -121,6 +120,13 @@ macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String
 	}
 }
 
+function copyFieldsAny(from: Any, to: Any) {
+	var fieldNames = Reflect.fields(from);
+	for (name in fieldNames) {
+		Reflect.setField(to, name, Reflect.field(from, name));
+	}
+}
+
 macro function duplicate(structure: Expr) {
 	var fieldNames = switch Context.followWithAbstracts(Context.typeof(structure)) {
 		case TAnonymous(_.get() => anon): anon.fields.map(f -> f.name);
@@ -137,6 +143,7 @@ macro function duplicate(structure: Expr) {
 		]),
 		pos: Context.currentPos(),
 	};
+
 	return macro {
 		var obj = $structure;
 		$objExpr;
