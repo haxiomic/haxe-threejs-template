@@ -1198,7 +1198,7 @@ function Main_main() {
 	let c1 = floorUI.add(o1,"reflectorKernel").name("reflectorKernel");
 	c1 = c1.min(0);
 	c1 = c1.max(0.1);
-	Main_arcBallControl.target.y = 0.7;
+	Main_arcBallControl.target.y = 0.4;
 	Main_animationFrame(window.performance.now());
 }
 function Main_animationFrame(time_ms) {
@@ -2249,7 +2249,7 @@ var Main_renderer = (function($this) {
 }(this));
 var Main_scene = new three_Scene();
 var Main_eventManager = new app_InteractionEventsManager(Main_canvas);
-var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 3, dragSpeed : 4., zoomSpeed : 1.});
+var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 1.5, dragSpeed : 4., zoomSpeed : 1.});
 var Main_uTime_s = new three_Uniform(0.0);
 var Main_background = new rendering_BackgroundEnvironment();
 var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/birchwood_2k.rgbd.png",function(env) {
