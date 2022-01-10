@@ -4,7 +4,7 @@ This is a batteries-include template project using three.js with the [haxe](http
 
 [See live](https://haxiomic.github.io/haxe-threejs-template)
 
-<img width="954" alt="Screenshot 2022-01-10 at 15 43 34" src="https://user-images.githubusercontent.com/3742992/148794626-7e7b98c8-6519-444d-97e7-d0b588349c50.png">
+[<img width="954" alt="Screenshot 2022-01-10 at 15 43 34" src="https://user-images.githubusercontent.com/3742992/148794626-7e7b98c8-6519-444d-97e7-d0b588349c50.png">](https://haxiomic.github.io/haxe-threejs-template)
 
 ## Building and running
 
