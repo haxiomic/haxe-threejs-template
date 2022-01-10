@@ -23,3 +23,11 @@ We can interact with three.js through externs generated from the typescript type
 
 three.js is included as a module by using `require()`, since browsers don't have `require` we use a bundler ([esbuild](https://github.com/evanw/esbuild)) so we generate a single file – this is called by [build.hxml](build.hxml). Alternatively we could have used three.js globally via a script tag if we generated the externs with [`--global`](https://github.com/haxiomic/dts2hx#faq)
 
+A haxe library, [three-toolkit](https://github.com/haxiomic/three-toolkit) is included, which provides useful utilities for working with three.js and haxe, including
+- Post processing pipeline tools
+- A dat.gui extension: [DevUI](.haxelib/three-toolkit/git/ui/DevUI.hx)
+- [CustomPhysicalMaterial](./haxelib/three-toolkit/git/material/CustomPhysicalMaterial.hx) for making pbr materials with custom shaders
+- Objects such as a soft mirror plane
+- Spring physics animation tooling
+
+Have fun :D, feel free to open issues if you have questions
