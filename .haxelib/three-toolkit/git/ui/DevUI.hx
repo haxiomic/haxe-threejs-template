@@ -19,10 +19,17 @@ class DevUI extends ExposedGUI {
 	public function new(options) {
 		super(options);
 		var styleEl = js.Browser.document.createStyleElement();
-		styleEl.innerHTML = '.dg .title {
+		styleEl.innerHTML = '
+		.dg .title {
 			overflow: hidden;
 			white-space: nowrap;
-		}';
+		}
+		/** allow function buttons to use all space **/
+		.dg .function .property-name {
+			width: auto;
+			white-space: nowrap;
+		}
+		';
 		js.Browser.document.head.appendChild(styleEl);
 	}
 

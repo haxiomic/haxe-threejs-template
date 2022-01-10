@@ -107,6 +107,7 @@ class EnvironmentManager {
 		final renderTarget = this._pmremRenderTarget;
 		final environmentPath = this.environmentPath;
 		final imageKind = 'png';
+
 		if (renderTarget != null && environmentPath != null) {
 			var w = Std.int(renderTarget.width);
 			var h = Std.int(renderTarget.height);
@@ -147,7 +148,7 @@ class EnvironmentManager {
 			// pngCanvas.style.position = 'absolute';
 			// pngCanvas.style.zIndex = '1000';
 		} else {
-			trace('No environment map');
+			js.Browser.alert('First load a .hdr environment file in order to download a pre-processed version');
 		}
 	}
 
