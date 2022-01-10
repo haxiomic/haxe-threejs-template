@@ -200,7 +200,7 @@ class DevUI {
 			var values = ${namesValues.values};
 			var obj = {};
 			for (i in 0...names.length) {
-				Reflect.setField(obj, names[i], i);
+				Reflect.setField(obj, names[i], values[i]);
 			}
 			var g = $self;
 
@@ -208,7 +208,16 @@ class DevUI {
 				var o = {};
 				// use native javascript setter as a proxy
 				js.lib.Object.defineProperty(o, $v{name}, {
-					set: (__index) -> $target = values[Std.int(__index)], // dat.gui makes all values a string, which is insane, so we use that as index to the real values
+					set: (__strValue) -> {
+						// dat.gui makes all values a string, which is insane
+						// let's search values and find the first with a matching string
+						for(value in values) {
+							if (Std.string(value) == __strValue) {
+								$target = value;
+								break;
+							}
+						}
+					}, 
 					get: () -> $target,
 				});
 				g.internal.add(o, $v{name}, obj)
