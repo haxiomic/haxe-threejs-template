@@ -26,7 +26,7 @@ three.js is included as a module by using `require()`, since browsers don't have
 A haxe library, [three-toolkit](https://github.com/haxiomic/three-toolkit) is included, which provides useful utilities for working with three.js and haxe, including
 - Post processing pipeline tools
 - A dat.gui extension: [DevUI](.haxelib/three-toolkit/git/ui/DevUI.hx)
-- [CustomPhysicalMaterial](./haxelib/three-toolkit/git/material/CustomPhysicalMaterial.hx) for making pbr materials with custom shaders
+- [CustomPhysicalMaterial](.haxelib/three-toolkit/git/material/CustomPhysicalMaterial.hx) for making pbr materials with custom shaders
 - Objects such as a soft mirror plane
 - Spring physics animation tooling
 
