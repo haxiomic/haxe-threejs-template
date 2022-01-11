@@ -32,4 +32,14 @@ A haxe library, [three-toolkit](https://github.com/haxiomic/three-toolkit) is in
 - Objects such as a soft mirror plane
 - Spring physics animation tooling
 
+## Why haxe not TypeScript?
+Where TypeScript improves on JavaScript by adding types, haxe asks how could we build a better language from ECMAScript foundations, without maintaining the warts from js. On the surface syntactically it's similar to TS but differs in a few key ways:
+- metaprogrammig: you can mark functions for compile-time execution
+- there's only one way import code, simply `import Module;`
+- `this` only refers to the current type and does not change on context at runtime
+- it's it supports functional programming patterns from inspired my meta languages like OCaml:
+    - everything is an expression
+    - pattern matching switch expression
+- it has a stricter type system, which leads to smaller output
+
 Have fun :D, feel free to open issues if you have questions
