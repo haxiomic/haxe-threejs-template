@@ -37,9 +37,10 @@ Where TypeScript improves on JavaScript by adding types, haxe asks how could we 
 - metaprogrammig: you can mark functions for compile-time execution
 - there's only one way import code, simply `import Module;`
 - `this` only refers to the current type and does not change on context at runtime
-- it supports functional programming patterns from inspired my meta languages like OCaml:
+- it supports functional programming patterns inspired my meta languages like OCaml:
     - everything is an expression
     - pattern matching switch expression
-- it has a stricter type system, which leads to smaller output
+- significantly faster compile-times
+- zero-cost abstraction types with [`abstracts`](https://haxe.org/blog/zero-cost-abstracts/)
 
 Have fun :D, feel free to open issues if you have questions
