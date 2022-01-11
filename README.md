@@ -38,7 +38,7 @@ Where TypeScript improves on JavaScript by adding types, haxe asks how could we 
 - there's only one way import code, simply `import Module;`
 - `this` only refers to the current type and does not change on context at runtime
 - it supports functional programming patterns inspired my meta languages like OCaml:
-    - everything is an expression
+    - [everything is an expression](https://code.haxe.org/category/principles/everything-is-an-expression.html)
     - [pattern matching switch expression](https://haxe.org/manual/lf-pattern-matching-structure.html)
 - significantly faster compile-times
 - zero-cost abstraction types with [`abstracts`](https://haxe.org/blog/zero-cost-abstracts/)
