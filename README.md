@@ -39,7 +39,7 @@ Where TypeScript improves on JavaScript by adding types, haxe asks how could we 
 - `this` only refers to the current type and does not change on context at runtime
 - it supports functional programming patterns inspired my meta languages like OCaml:
     - everything is an expression
-    - pattern matching switch expression
+    - [pattern matching switch expression](https://haxe.org/manual/lf-pattern-matching-structure.html)
 - significantly faster compile-times
 - zero-cost abstraction types with [`abstracts`](https://haxe.org/blog/zero-cost-abstracts/)
 
