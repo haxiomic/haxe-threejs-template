@@ -160,9 +160,9 @@ function initDevUI() {
 
 		var renderer = renderer;
 		g.add(renderer.toneMapping).onChange(v -> {
-			// little three.js workaround: force shader rebuild
+			// little three.js workaround: force shader rebuild: change encoding for 1 frame
 			var outputEncoding = renderer.outputEncoding;
-			renderer.outputEncoding = null;
+			renderer.outputEncoding = outputEncoding != LinearEncoding ? LinearEncoding : GammaEncoding;
 			window.requestAnimationFrame(t -> renderer.outputEncoding = outputEncoding);
 		});
 
