@@ -63,8 +63,6 @@ final environmentManager = new EnvironmentManager(renderer, scene, 'assets/env/k
 // embed the glb model as a base64 string
 final haxeLogoDataUrl = 'data:model/gltf-binary;base64,' + CompileTime.embedBase64('haxe-logo.glb');
 
-var renderTargetParametersNeedUpdate = false;
-
 @:keep var devUI = initDevUI();
 
 function main() {
@@ -138,8 +136,6 @@ function animationFrame(time_ms: Float) {
 	renderer.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);	
 	renderer.clear(true, true, true);
 	renderer.render(scene, camera);
-
-	renderTargetParametersNeedUpdate = false;
 
 	window.requestAnimationFrame(animationFrame);
 }
