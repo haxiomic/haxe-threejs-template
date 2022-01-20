@@ -1,4 +1,5 @@
 (function ($global) { "use strict";
+var $estr = function() { return js_Boot.__string_rec(this,''); },$hxEnums = $hxEnums || {},$_;
 class HxOverrides {
 	static substr(s,pos,len) {
 		if(len == null) {
@@ -17,13 +18,13 @@ class HxOverrides {
 	}
 }
 HxOverrides.__name__ = true;
-class app_InteractionEventsManager {
+class event_ViewEventManager {
 	constructor(el) {
-		this.haxeAppActivated = false;
-		this.elClientHeight = null;
-		this.elClientWidth = null;
+		this.appActivated = false;
+		this.activePointerCount = 0;
+		this.activePointers = new haxe_ds_IntMap();
 		this.el = el;
-		this.eventHandler = new app__$InteractionEventsManager_EventDispatcher();
+		this.eventHandler = new event__$ViewEventManager_EventDispatcher();
 		if(el.tabIndex == null) {
 			el.tabIndex = 1;
 		}
@@ -39,21 +40,20 @@ class app_InteractionEventsManager {
 		this.addWheelEventListeners();
 		this.addKeyboardEventListeners();
 		this.addLifeCycleEventListeners();
-		this.addResizeEventListeners();
 		this.onVisibilityChange();
 	}
 	onVisibilityChange() {
 		switch(window.document.visibilityState) {
 		case "hidden":
-			if(this.haxeAppActivated) {
+			if(this.appActivated) {
 				this.eventHandler.onDeactivate();
-				this.haxeAppActivated = false;
+				this.appActivated = false;
 			}
 			break;
 		case "visible":
-			if(!this.haxeAppActivated) {
+			if(!this.appActivated) {
 				this.eventHandler.onActivate();
-				this.haxeAppActivated = true;
+				this.appActivated = true;
 			}
 			break;
 		}
@@ -62,9 +62,9 @@ class app_InteractionEventsManager {
 		let _gthis = this;
 		let executePointerMethodFromMouseEvent = function(mouseEvent,pointerMethod) {
 			let force = mouseEvent.force != null ? mouseEvent.force : mouseEvent.webkitForce != null ? mouseEvent.webkitForce : 0.5;
-			if(pointerMethod(new app_event_PointerEvent(1,"mouse",true,mouseEvent.button,mouseEvent.buttons,mouseEvent.clientX,mouseEvent.clientY,1,1,_gthis.el.clientWidth,_gthis.el.clientHeight,Math.max(force - 1,0),0,0,0,0)) == 0) {
-				mouseEvent.preventDefault();
-			}
+			pointerMethod(new event_PointerEvent(mouseEvent.button,$bind(mouseEvent,mouseEvent.preventDefault),function() {
+				return mouseEvent.defaultPrevented;
+			},mouseEvent,1,"mouse",true,mouseEvent.buttons,mouseEvent.clientX,mouseEvent.clientY,1,1,_gthis.el.clientWidth,_gthis.el.clientHeight,Math.max(force - 1,0),0,0,0,0));
 		};
 		let touchInfoForType_h = Object.create(null);
 		let getTouchInfoForType = function(type) {
@@ -121,36 +121,102 @@ class app_InteractionEventsManager {
 				let tiltY = Math.atan(Math.sin(touch.azimuthAngle) / tanAlt) * radToDeg;
 				let radiusX = touch.radiusX != null ? touch.radiusX : touch.webkitRadiusX != null ? touch.webkitRadiusX : 5;
 				let radiusY = touch.radiusY != null ? touch.radiusY : touch.webkitRadiusY != null ? touch.webkitRadiusY : 5;
-				if(pointerMethod(new app_event_PointerEvent(touch.identifier,touch.touchType == "stylus" ? "pen" : "touch",touch.identifier == touchInfo.primaryTouchIdentifier,buttonStates.button,buttonStates.buttons,touch.clientX,touch.clientY,radiusX * 2,radiusY * 2,_gthis.el.clientWidth,_gthis.el.clientHeight,touch.force,0,isFinite(tiltX) ? tiltX : 0,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle)) == 0) {
-					touchEvent.preventDefault();
-				}
+				let _g1 = touch.identifier;
+				let _g2 = touch.touchType == "stylus" ? "pen" : "touch";
+				let _g3 = touch.identifier == touchInfo.primaryTouchIdentifier;
+				let _g4 = buttonStates.button;
+				let _g5 = buttonStates.buttons;
+				let _g6 = touch.clientX;
+				let _g7 = touch.clientY;
+				let _g8 = _gthis.el.clientWidth;
+				let _g9 = _gthis.el.clientHeight;
+				let _g10 = touch.force;
+				let _g11 = isFinite(tiltX) ? tiltX : 0;
+				pointerMethod(new event_PointerEvent(_g4,$bind(touchEvent,touchEvent.preventDefault),function() {
+					return touchEvent.defaultPrevented;
+				},touchEvent,_g1,_g2,_g3,_g5,_g6,_g7,radiusX * 2,radiusY * 2,_g8,_g9,_g10,0,_g11,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle));
+			}
+		};
+		let updatePointerState = function(e) {
+			let existingPointer = _gthis.activePointers.h[e.pointerId];
+			if(existingPointer != null) {
+				existingPointer.buttons = e.buttons;
+				existingPointer.x = e.x;
+				existingPointer.y = e.y;
+				existingPointer.width = e.width;
+				existingPointer.height = e.height;
+				existingPointer.viewWidth = e.viewWidth;
+				existingPointer.viewHeight = e.viewHeight;
+				existingPointer.pressure = e.pressure;
+				existingPointer.tangentialPressure = e.tangentialPressure;
+				existingPointer.tiltX = e.tiltX;
+				existingPointer.tiltY = e.tiltY;
+				existingPointer.twist = e.twist;
+			} else {
+				_gthis.activePointers.h[e.pointerId] = new event_PointerState(e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x,e.y,e.width,e.height,e.viewWidth,e.viewHeight,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist);
+				_gthis.activePointerCount++;
+			}
+		};
+		let removePointerState = function(e) {
+			if(_gthis.activePointers.remove(e.pointerId)) {
+				_gthis.activePointerCount--;
 			}
 		};
 		let onPointerDown = function(e) {
 			e["viewWidth"] = _gthis.el.clientWidth;
 			e["viewHeight"] = _gthis.el.clientHeight;
-			return _gthis.eventHandler.onPointerDown(e);
+			updatePointerState(e);
+			_gthis.eventHandler.onPointerDown(e);
 		};
 		let onPointerMove = function(e) {
 			e["viewWidth"] = _gthis.el.clientWidth;
 			e["viewHeight"] = _gthis.el.clientHeight;
-			return _gthis.eventHandler.onPointerMove(e);
+			updatePointerState(e);
+			_gthis.eventHandler.onPointerMove(e);
 		};
 		let onPointerUp = function(e) {
 			e["viewWidth"] = _gthis.el.clientWidth;
 			e["viewHeight"] = _gthis.el.clientHeight;
-			return _gthis.eventHandler.onPointerUp(e);
+			switch(e.pointerType) {
+			case "mouse":
+				updatePointerState(e);
+				break;
+			case "pen":case "touch":
+				removePointerState(e);
+				break;
+			}
+			_gthis.eventHandler.onPointerUp(e);
 		};
 		let onPointerCancel = function(e) {
 			e["viewWidth"] = _gthis.el.clientWidth;
 			e["viewHeight"] = _gthis.el.clientHeight;
-			return _gthis.eventHandler.onPointerCancel(e);
+			switch(e.pointerType) {
+			case "mouse":
+				updatePointerState(e);
+				break;
+			case "pen":case "touch":
+				removePointerState(e);
+				break;
+			}
+			_gthis.eventHandler.onPointerCancel(e);
 		};
 		if(window.PointerEvent) {
-			this.el.addEventListener("pointerdown",onPointerDown);
-			window.addEventListener("pointermove",onPointerMove);
-			window.addEventListener("pointerup",onPointerUp);
-			window.addEventListener("pointercancel",onPointerCancel);
+			this.el.addEventListener("pointerdown",function(e) {
+				e["nativeEvent"] = e;
+				onPointerDown(e);
+			});
+			window.addEventListener("pointermove",function(e) {
+				e["nativeEvent"] = e;
+				onPointerMove(e);
+			});
+			window.addEventListener("pointerup",function(e) {
+				e["nativeEvent"] = e;
+				onPointerUp(e);
+			});
+			window.addEventListener("pointercancel",function(e) {
+				e["nativeEvent"] = e;
+				onPointerCancel(e);
+			});
 		} else {
 			this.el.addEventListener("mousedown",function(e) {
 				executePointerMethodFromMouseEvent(e,onPointerDown);
@@ -209,22 +275,18 @@ class app_InteractionEventsManager {
 				deltaZ_px = e.deltaZ * 100;
 				break;
 			}
-			if(_gthis.eventHandler.onWheel(new app_event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px,y_px,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,e)) == 0) {
-				e.preventDefault();
-			}
+			_gthis.eventHandler.onWheel(new event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px,y_px,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,$bind(e,e.preventDefault),function() {
+				return e.defaultPrevented;
+			},e));
 		},{ passive : false});
 	}
 	addKeyboardEventListeners() {
 		let _gthis = this;
 		window.addEventListener("keydown",function(e) {
-			if(_gthis.eventHandler.onKeyDown(e,e.target == _gthis.el) == 0) {
-				e.preventDefault();
-			}
+			_gthis.eventHandler.onKeyDown(e,e.target == _gthis.el);
 		});
 		window.addEventListener("keyup",function(e) {
-			if(_gthis.eventHandler.onKeyUp(e,e.target == _gthis.el) == 0) {
-				e.preventDefault();
-			}
+			_gthis.eventHandler.onKeyUp(e,e.target == _gthis.el);
 		});
 	}
 	addLifeCycleEventListeners() {
@@ -233,19 +295,9 @@ class app_InteractionEventsManager {
 			_gthis.onVisibilityChange();
 		});
 	}
-	addResizeEventListeners() {
-		let _gthis = this;
-		window.addEventListener("resize",function() {
-			if(_gthis.elClientWidth != _gthis.el.clientWidth || _gthis.elClientHeight != _gthis.el.clientHeight) {
-				_gthis.elClientWidth = _gthis.el.clientWidth;
-				_gthis.elClientHeight = _gthis.el.clientHeight;
-				_gthis.eventHandler.onResize(_gthis.el.clientWidth,_gthis.el.clientHeight);
-			}
-		},{ capture : false});
-	}
 }
-app_InteractionEventsManager.__name__ = true;
-class app__$InteractionEventsManager_EventDispatcher {
+event_ViewEventManager.__name__ = true;
+class event__$ViewEventManager_EventDispatcher {
 	constructor() {
 		this.onDeactivateCallbacks = [];
 		this.onActivateCallbacks = [];
@@ -256,68 +308,41 @@ class app__$InteractionEventsManager_EventDispatcher {
 		this.onPointerUpCallbacks = [];
 		this.onPointerMoveCallbacks = [];
 		this.onPointerDownCallbacks = [];
-		this.onResizeCallbacks = [];
-	}
-	onResize(width,height) {
-		let _g = 0;
-		let _g1 = this.onResizeCallbacks;
-		while(_g < _g1.length) _g1[_g++](width,height);
 	}
 	onPointerDown(event) {
 		let _g = 0;
 		let _g1 = this.onPointerDownCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event);
 	}
 	onPointerMove(event) {
 		let _g = 0;
 		let _g1 = this.onPointerMoveCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event);
 	}
 	onPointerUp(event) {
 		let _g = 0;
 		let _g1 = this.onPointerUpCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event);
 	}
 	onPointerCancel(event) {
 		let _g = 0;
 		let _g1 = this.onPointerCancelCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event);
 	}
 	onWheel(event) {
 		let _g = 0;
 		let _g1 = this.onWheelCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event);
 	}
 	onKeyDown(event,hasFocus) {
 		let _g = 0;
 		let _g1 = this.onKeyDownCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event,hasFocus) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event,hasFocus);
 	}
 	onKeyUp(event,hasFocus) {
 		let _g = 0;
 		let _g1 = this.onKeyUpCallbacks;
-		while(_g < _g1.length) if(_g1[_g++](event,hasFocus) == 0) {
-			return 0;
-		}
-		return 1;
+		while(_g < _g1.length) _g1[_g++](event,hasFocus);
 	}
 	onActivate() {
 		let _g = 0;
@@ -330,7 +355,7 @@ class app__$InteractionEventsManager_EventDispatcher {
 		while(_g < _g1.length) _g1[_g++]();
 	}
 }
-app__$InteractionEventsManager_EventDispatcher.__name__ = true;
+event__$ViewEventManager_EventDispatcher.__name__ = true;
 class control_ArcBallControl {
 	constructor(options) {
 		this._isPointerDown = false;
@@ -340,14 +365,14 @@ class control_ArcBallControl {
 		this.orientation = new Vec4Data(0,0,0,1);
 		this.position = new Vec3Data(0.,0.,0.);
 		this.target = new Vec3Data(0.,0.,0.);
-		this.radius = new animator_Spring(1.);
-		this.axialRotation = new animator_Spring(0.);
-		this.angleAroundXZ = new animator_Spring(0.);
-		this.angleAroundY = new animator_Spring(0.);
+		this.radius = new animation_Spring(1.);
+		this.axialRotation = new animation_Spring(0.);
+		this.angleAroundXZ = new animation_Spring(0.);
+		this.angleAroundY = new animation_Spring(0.);
 		let a = control_ArcBallControl.defaults;
+		let options_viewEventManager = options.viewEventManager;
 		let options_radius = options.radius != null ? options.radius : a.radius;
 		let options_interactionSurface = options.interactionSurface;
-		let options_interactionEventsManager = options.interactionEventsManager;
 		let options_angleAroundXZ = options.angleAroundXZ != null ? options.angleAroundXZ : a.angleAroundXZ;
 		this.dragSpeed = options.dragSpeed != null ? options.dragSpeed : a.dragSpeed;
 		this.zoomSpeed = options.zoomSpeed != null ? options.zoomSpeed : a.zoomSpeed;
@@ -364,43 +389,50 @@ class control_ArcBallControl {
 		this.radius.forceCompletion(options_radius);
 		let interactionSurface = options_interactionSurface;
 		let _gthis = this;
-		if(options_interactionEventsManager != null) {
-			options_interactionEventsManager.eventHandler.onPointerDownCallbacks.push(function(e) {
+		if(options_viewEventManager != null) {
+			options_viewEventManager.eventHandler.onPointerDownCallbacks.push(function(e) {
 				_gthis._isPointerDown = true;
 				_gthis._onDown_angleAroundY = _gthis.angleAroundY.target;
 				_gthis._onDown_angleAroundXZ = _gthis.angleAroundXZ.target;
 				let this1 = _gthis._onDown_clientXY;
 				this1.x = e.x;
 				this1.y = e.y;
-				return 1;
 			});
-			options_interactionEventsManager.eventHandler.onPointerMoveCallbacks.push(function(e) {
-				let surfaceSize_x = e.viewWidth;
-				let surfaceSize_y = e.viewHeight;
+			let cb = function(e) {
+				let x = e.viewWidth;
+				let y = e.viewHeight;
+				let cb;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / y - a.y / y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let u_x = this1.x;
-					let u_y = this1.y;
-					let u_z = this1.z;
+					let v_x = 0;
+					let v_y = 1;
+					let v_z = 0;
+					let x1 = this1.x;
+					let y1 = this1.y;
+					let z = this1.z;
 					let s = this1.w;
-					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
-					return 0;
+					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * _gthis.dragSpeed * (x / y);
+					cb = 0;
 				} else {
-					return 1;
+					cb = 1;
 				}
-			});
-			options_interactionEventsManager.eventHandler.onPointerUpCallbacks.push(function(e) {
+				if(cb == 0) {
+					e.preventDefault();
+				}
+			};
+			options_viewEventManager.eventHandler.onPointerMoveCallbacks.push(cb);
+			options_viewEventManager.eventHandler.onPointerUpCallbacks.push(function(e) {
 				_gthis._isPointerDown = false;
-				return 1;
 			});
-			options_interactionEventsManager.eventHandler.onWheelCallbacks.push(function(e) {
+			let cb1 = function(e) {
 				_gthis.radius.target += e.deltaY * _gthis.zoomSpeed / 1000;
 				_gthis.radius.target = Math.max(_gthis.radius.target,0);
-				return 0;
-			});
+				e.preventDefault();
+			};
+			options_viewEventManager.eventHandler.onWheelCallbacks.push(cb1);
 		} else if(interactionSurface != null) {
 			interactionSurface.addEventListener("mousedown",function(e) {
 				_gthis._isPointerDown = true;
@@ -414,19 +446,22 @@ class control_ArcBallControl {
 				_gthis._isPointerDown = false;
 			});
 			window.addEventListener("mousemove",function(e) {
-				let surfaceSize_x = interactionSurface.clientWidth;
-				let surfaceSize_y = interactionSurface.clientHeight;
+				let x = interactionSurface.clientWidth;
+				let y = interactionSurface.clientHeight;
 				let tmp;
 				if(_gthis._isPointerDown) {
 					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / surfaceSize_y - a.y / surfaceSize_y) * _gthis.dragSpeed;
+					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / y - a.y / y) * _gthis.dragSpeed;
 					let this1 = _gthis.orientation;
-					let u_x = this1.x;
-					let u_y = this1.y;
-					let u_z = this1.z;
+					let v_x = 0;
+					let v_y = 1;
+					let v_z = 0;
+					let x1 = this1.x;
+					let y1 = this1.y;
+					let z = this1.z;
 					let s = this1.w;
-					let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.clientX / surfaceSize_x - a.x / surfaceSize_x) * _gthis.dragSpeed * (surfaceSize_x / surfaceSize_y);
+					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
+					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.clientX / x - a.x / x) * _gthis.dragSpeed * (x / y);
 					tmp = 0;
 				} else {
 					tmp = 1;
@@ -444,18 +479,6 @@ class control_ArcBallControl {
 				e.preventDefault();
 			},{ passive : false});
 		}
-	}
-	applyToCamera(camera) {
-		let a = this.position;
-		let b = this.target;
-		let q = this.orientation;
-		camera.position.x = a.x + b.x;
-		camera.position.y = a.y + b.y;
-		camera.position.z = a.z + b.z;
-		camera.quaternion.x = q.x;
-		camera.quaternion.y = q.y;
-		camera.quaternion.z = q.z;
-		camera.quaternion.w = q.w;
 	}
 }
 control_ArcBallControl.__name__ = true;
@@ -570,6 +593,34 @@ class js_Boot {
 		case "function":
 			return "<function>";
 		case "object":
+			if(o.__enum__) {
+				let e = $hxEnums[o.__enum__];
+				let con = e.__constructs__[o._hx_index];
+				let n = con._hx_name;
+				if(con.__params__) {
+					s = s + "\t";
+					return n + "(" + ((function($this) {
+						var $r;
+						let _g = [];
+						{
+							let _g1 = 0;
+							let _g2 = con.__params__;
+							while(true) {
+								if(!(_g1 < _g2.length)) {
+									break;
+								}
+								let p = _g2[_g1];
+								_g1 = _g1 + 1;
+								_g.push(js_Boot.__string_rec(o[p],s));
+							}
+						}
+						$r = _g;
+						return $r;
+					}(this))).join(",") + ")";
+				} else {
+					return n;
+				}
+			}
 			if(((o) instanceof Array)) {
 				let str = "[";
 				s += "\t";
@@ -829,6 +880,7 @@ function Main_animationFrame(time_ms) {
 }
 function Main_update(time_s,dt_s) {
 	let _this = Main_arcBallControl;
+	let camera = Main_camera;
 	_this.angleAroundY.step(dt_s);
 	_this.angleAroundXZ.step(dt_s);
 	_this.axialRotation.step(dt_s);
@@ -842,32 +894,41 @@ function Main_update(time_s,dt_s) {
 	let denominator = lenSq == 0.0 ? 1.0 : Math.sqrt(lenSq);
 	let angle = _this.axialRotation.value;
 	let sa = Math.sin(angle * 0.5);
-	let axial_x = v.x / denominator * sa;
-	let axial_y = v.y / denominator * sa;
-	let axial_z = v.z / denominator * sa;
-	let axial_w = Math.cos(angle * 0.5);
+	let x = v.x / denominator * sa;
+	let y = v.y / denominator * sa;
+	let z = v.z / denominator * sa;
+	let w = Math.cos(angle * 0.5);
 	let angle1 = _this.angleAroundY.value;
 	let sa1 = Math.sin(angle1 * 0.5);
-	let aY_x = 0 * sa1;
-	let aY_y = 1 * sa1;
-	let aY_z = 0 * sa1;
-	let aY_w = Math.cos(angle1 * 0.5);
+	let x1 = 0 * sa1;
+	let y1 = 1 * sa1;
+	let z1 = 0 * sa1;
+	let w1 = Math.cos(angle1 * 0.5);
 	let angle2 = -_this.angleAroundXZ.value;
 	let sa2 = Math.sin(angle2 * 0.5);
-	let aXZ_x = 1 * sa2;
-	let aXZ_y = 0 * sa2;
-	let aXZ_z = 0 * sa2;
-	let aXZ_w = Math.cos(angle2 * 0.5);
-	let this2 = _this.orientation;
-	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
-	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
-	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
-	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
-	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
-	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
-	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
-	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
-	Main_arcBallControl.applyToCamera(Main_camera);
+	let x2 = 1 * sa2;
+	let y2 = 0 * sa2;
+	let z2 = 0 * sa2;
+	let w2 = Math.cos(angle2 * 0.5);
+	let this11 = _this.orientation;
+	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
+	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
+	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
+	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
+	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
+	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
+	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
+	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
+	let a = _this.position;
+	let b = _this.target;
+	let q = _this.orientation;
+	camera.position.x = a.x + b.x;
+	camera.position.y = a.y + b.y;
+	camera.position.z = a.z + b.z;
+	camera.quaternion.x = q.x;
+	camera.quaternion.y = q.y;
+	camera.quaternion.z = q.z;
+	camera.quaternion.w = q.w;
 }
 function Main_initDevUI() {
 	let gui = new ui_DevUI({ closed : false});
@@ -971,17 +1032,17 @@ function Main_initDevUI() {
 	let _this = options;
 	let result = new Array(_this.length);
 	let _g4 = 0;
-	let _g5 = _this.length;
-	while(_g4 < _g5) {
+	let _g11 = _this.length;
+	while(_g4 < _g11) {
 		let i = _g4++;
 		result[i] = Std.string(_this[i]);
 	}
 	let values2 = options;
 	let obj2 = { };
-	let _g6 = 0;
-	let _g7 = result.length;
-	while(_g6 < _g7) {
-		let i = _g6++;
+	let _g5 = 0;
+	let _g6 = result.length;
+	while(_g5 < _g6) {
+		let i = _g5++;
 		obj2[result[i]] = values2[i];
 	}
 	let o6 = { };
@@ -1111,24 +1172,30 @@ class Vec4Data {
 	}
 }
 Vec4Data.__name__ = true;
-class animator_Spring {
-	constructor(initialValue,target,strength,damping,velocity,onUpdate) {
+class animation_Spring {
+	constructor(initialValue,target,style,velocity,onUpdate,onComplete) {
 		if(velocity == null) {
 			velocity = 0.0;
 		}
-		if(damping == null) {
-			damping = 18;
-		}
-		if(strength == null) {
-			strength = 80;
-		}
 		this.minEnergyThreshold = 1e-5;
+		if(style == null) {
+			style = animation_SpringStyle.Critical(0.5);
+		}
 		this.value = initialValue;
 		this.target = target == null ? initialValue : target;
-		this.strength = strength;
-		this.damping = damping;
+		switch(style._hx_index) {
+		case 0:
+			this.damping = 3.356694 / style.approxHalfLife_s;
+			this.strength = this.damping * this.damping / 4;
+			break;
+		case 1:
+			this.damping = style.damping;
+			this.strength = style.strength;
+			break;
+		}
 		this.velocity = velocity;
 		this.onUpdate = onUpdate;
+		this.onComplete = onComplete;
 	}
 	step(dt_s) {
 		let V0 = this.velocity;
@@ -1138,9 +1205,12 @@ class animator_Spring {
 		}
 		let k = this.strength;
 		let b = this.damping;
-		if(0.5 * V0 * V0 + 0.5 * k * X0 * X0 < this.minEnergyThreshold) {
+		if(this.getTotalEnergy() < this.minEnergyThreshold) {
 			this.velocity = 0;
 			this.value = this.target;
+			if(this.onComplete != null) {
+				this.onComplete();
+			}
 		} else {
 			let critical = k * 4 - b * b;
 			if(critical > 0) {
@@ -1173,27 +1243,33 @@ class animator_Spring {
 			this.onUpdate(this.value,this.velocity);
 		}
 	}
+	getTotalEnergy() {
+		let x = this.value - this.target;
+		return 0.5 * this.velocity * this.velocity + 0.5 * this.strength * x * x;
+	}
 	forceCompletion(v) {
 		if(v != null) {
 			this.target = v;
 		}
 		this.value = this.target;
 		this.velocity = 0;
-		if(this.onUpdate != null) {
-			this.onUpdate(this.value,this.velocity);
-		}
+		this.step(0);
 	}
 }
-animator_Spring.__name__ = true;
-class app_event_KeyboardEvent {
+animation_Spring.__name__ = true;
+var animation_SpringStyle = $hxEnums["animation.SpringStyle"] = { __ename__:true,__constructs__:null
+	,Critical: ($_=function(approxHalfLife_s) { return {_hx_index:0,approxHalfLife_s:approxHalfLife_s,__enum__:"animation.SpringStyle",toString:$estr}; },$_._hx_name="Critical",$_.__params__ = ["approxHalfLife_s"],$_)
+	,Custom: ($_=function(strength,damping) { return {_hx_index:1,strength:strength,damping:damping,__enum__:"animation.SpringStyle",toString:$estr}; },$_._hx_name="Custom",$_.__params__ = ["strength","damping"],$_)
+};
+animation_SpringStyle.__constructs__ = [animation_SpringStyle.Critical,animation_SpringStyle.Custom];
+class event_KeyboardEvent {
 }
-app_event_KeyboardEvent.__name__ = true;
-class app_event_PointerEvent {
-	constructor(pointerId,pointerType,isPrimary,button,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
+event_KeyboardEvent.__name__ = true;
+class event_PointerState {
+	constructor(pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
 		this.pointerId = pointerId;
 		this.pointerType = pointerType;
 		this.isPrimary = isPrimary;
-		this.button = button;
 		this.buttons = buttons;
 		this.x = x;
 		this.y = y;
@@ -1208,9 +1284,19 @@ class app_event_PointerEvent {
 		this.twist = twist;
 	}
 }
-app_event_PointerEvent.__name__ = true;
-class app_event_WheelEvent {
-	constructor(deltaX,deltaY,deltaZ,x,y,altKey,ctrlKey,metaKey,shiftKey,nativeEvent) {
+event_PointerState.__name__ = true;
+class event_PointerEvent extends event_PointerState {
+	constructor(button,preventDefault,defaultPrevented,nativeEvent,pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
+		super(pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist);
+		this.button = button;
+		this.preventDefault = preventDefault;
+		this.defaultPrevented = defaultPrevented;
+		this.nativeEvent = nativeEvent;
+	}
+}
+event_PointerEvent.__name__ = true;
+class event_WheelEvent {
+	constructor(deltaX,deltaY,deltaZ,x,y,altKey,ctrlKey,metaKey,shiftKey,preventDefault,defaultPrevented,nativeEvent) {
 		this.deltaX = deltaX;
 		this.deltaY = deltaY;
 		this.deltaZ = deltaZ;
@@ -1220,10 +1306,25 @@ class app_event_WheelEvent {
 		this.ctrlKey = ctrlKey;
 		this.metaKey = metaKey;
 		this.shiftKey = shiftKey;
+		this.preventDefault = preventDefault;
+		this.defaultPrevented = defaultPrevented;
 		this.nativeEvent = nativeEvent;
 	}
 }
-app_event_WheelEvent.__name__ = true;
+event_WheelEvent.__name__ = true;
+class haxe_ds_IntMap {
+	constructor() {
+		this.h = { };
+	}
+	remove(key) {
+		if(!this.h.hasOwnProperty(key)) {
+			return false;
+		}
+		delete(this.h[key]);
+		return true;
+	}
+}
+haxe_ds_IntMap.__name__ = true;
 class haxe_ds_StringMap {
 	constructor() {
 		this.h = Object.create(null);
@@ -1757,7 +1858,6 @@ class tool_IBLGenerator extends tool_PMREMGeneratorInternal {
 	}
 }
 tool_IBLGenerator.__name__ = true;
-var $_;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $global.$haxeUID++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = m.bind(o); o.hx__closures__[m.__id__] = f; } return f; }
 $global.$haxeUID |= 0;
 if(typeof(performance) != "undefined" ? typeof(performance.now) == "function" : false) {
@@ -1798,8 +1898,8 @@ var Main_renderer = (function($this) {
 	return $r;
 }(this));
 var Main_scene = new three_Scene();
-var Main_eventManager = new app_InteractionEventsManager(Main_canvas);
-var Main_arcBallControl = new control_ArcBallControl({ interactionEventsManager : Main_eventManager, radius : 4., dragSpeed : 4., zoomSpeed : 1.});
+var Main_eventManager = new event_ViewEventManager(Main_canvas);
+var Main_arcBallControl = new control_ArcBallControl({ viewEventManager : Main_eventManager, radius : 4., dragSpeed : 4., zoomSpeed : 1.});
 var Main_uTime_s = new three_Uniform(0.0);
 var Main_background = new rendering_BackgroundEnvironment();
 var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/kiara_1_dawn_2k.rgbd.png",function(env) {
