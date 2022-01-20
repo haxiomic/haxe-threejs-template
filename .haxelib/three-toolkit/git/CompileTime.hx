@@ -1,5 +1,3 @@
-package tool;
-
 #if macro
 import haxe.crypto.Base64;
 import haxe.io.Path;

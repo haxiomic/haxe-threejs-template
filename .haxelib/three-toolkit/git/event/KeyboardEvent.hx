@@ -1,4 +1,4 @@
-package app.event;
+package event;
 
 /**
 	See https://w3c.github.io/uievents/#idl-keyboardevent
@@ -39,9 +39,22 @@ class KeyboardEvent {
 	final metaKey: Bool;
 	final shiftKey: Bool;
 
+	final preventDefault: () -> Void;
+	final defaultPrevented: () -> Bool;
+
 	/**
 		Reference to original native event object – type varies between platform
 	**/
 	final nativeEvent: #if js js.html.KeyboardEvent #else Dynamic #end;
 
+}
+
+/**
+	See https://w3c.github.io/uievents/#dom-keyboardevent-dom_key_location_standard
+**/
+enum abstract KeyLocation(Int) to Int from Int {
+	var STANDARD = 0;
+	var LEFT = 1;
+	var RIGHT = 2;
+	var NUMPAD = 3;
 }

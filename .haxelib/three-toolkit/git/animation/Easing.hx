@@ -1,8 +1,22 @@
-package animator;
+package animation;
+
+enum Easing {
+	Linear;
+	SineIn;
+	SineOut;
+	SineInOut;
+	QuadIn;
+	QuadOut;
+	QuadInOut;
+	CubicIn;
+	CubicOut;
+	CubicInOut;
+	Custom(fn: EasingFunction);
+}
 
 typedef EasingFunction = (x0:Float, x1:Float, duration:Float, t:Float) -> Float;
 
-class Easing {
+class EasingFunctions {
 
 	static public inline function linear(x0:Float, x1:Float, duration:Float, t:Float):Float
 		return x0 + (x1 - x0)*(t / duration);

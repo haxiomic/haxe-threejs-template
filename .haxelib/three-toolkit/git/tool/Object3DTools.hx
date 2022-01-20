@@ -83,4 +83,25 @@ class Object3DTools {
 		return materials;
 	}
 
+	static public function getMaterialByName(obj: Object3D, name: String): Null<Material> {
+		if (obj is Mesh) {
+			var obj = (cast obj: Mesh<Any, three.Material>);
+			if (obj.material != null && obj.material.name == name) {
+				return obj.material;
+			}
+		}
+		var material = null;
+		findDescendant(obj, (obj) -> {
+			if (obj is Mesh) {
+				var obj = (cast obj: Mesh<Any, three.Material>);
+				if (obj.material != null && obj.material.name == name) {
+					material = obj.material;
+					return true;
+				}
+			}
+			return false;
+		});
+		return material;
+	}
+
 }

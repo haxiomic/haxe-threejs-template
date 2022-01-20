@@ -1,4 +1,4 @@
-package animator;
+package animation;
 
 import Math.*;
 
@@ -13,23 +13,35 @@ class Spring {
 	public var velocity: Float;
 	public var strength: Float;
 	public var damping: Float;
-	public var onUpdate: Null<(value: Float, velocity: Float) -> Void>;
 	public var minEnergyThreshold = 1e-5;
+	final onUpdate: Null<(value: Float, velocity: Float) -> Void>;
+	final onComplete: Null<() -> Void>;
 	
 	public function new(
 		initialValue: Float,
 		?target: Float,
-		strength: Float = 80,
-		damping: Float = 18,
+		?style: SpringStyle,
 		velocity: Float = 0.0,
-		?onUpdate: (value: Float, velocity: Float) -> Void
+		?onUpdate: (value: Float, velocity: Float) -> Void,
+		?onComplete: () -> Void
 	) {
+		if (style == null) {
+			style = Critical(0.5);
+		}
+
 		this.value = initialValue;
 		this.target = target == null ? initialValue : target;
-		this.strength = strength;
-		this.damping = damping;
+		switch style {
+			case Critical(approxHalfLife_s):
+				this.damping = 3.356694 / approxHalfLife_s;
+				this.strength = this.damping * this.damping / 4;
+			case Custom(strength, damping):
+				this.damping = damping;
+				this.strength = strength;
+		}
 		this.velocity = velocity;
 		this.onUpdate = onUpdate;
+		this.onComplete = onComplete;
 	}
 
 	public function step(dt_s: Float) {
@@ -49,13 +61,12 @@ class Spring {
 		var k = this.strength;
 		var b = this.damping; // β in wolfram reference
 
-		var totalEnergy =
-			0.5 * V0 * V0 +    // kinetic energy
-			0.5 * k * X0 * X0; // potential energy
-
-		if (totalEnergy < minEnergyThreshold) {
+		if (getTotalEnergy() < minEnergyThreshold) {
 			this.velocity = 0;
 			this.value = this.target;
+			if (onComplete != null) {
+				onComplete();
+			}
 		} else {
 			var critical = k * 4 - b * b;
 
@@ -113,8 +124,19 @@ class Spring {
 		if (onUpdate != null) onUpdate(value, velocity);
 	}
 
+	public function getTotalEnergy() {
+		var x: Float = value - target;
+		return
+			0.5 * velocity * velocity +    // kinetic energy
+			0.5 * strength * x * x; // potential energy
+	}
+
 	public function set(v: Float) {
 		forceCompletion(v);
+	}
+
+	public function isComplete() {
+		return this.velocity == 0 && value == target;
 	}
 
 	public function forceCompletion(?v: Float) {
@@ -123,7 +145,28 @@ class Spring {
 		}
 		value = target;
 		velocity = 0;
-		if (onUpdate != null) onUpdate(value, velocity);
+		step(0);
 	}
+
+}
+
+
+enum SpringStyle {
+
+	// Soft;
+	// Hard;
+	// Bouncy;
+
+	/**
+	 * Critically damped spring, similar to exponential falloff
+	 * Starting with 0 velocity, this parameter describes how long it would take to reach half-way to the target
+	 * 
+	 * `damping = 3.356694 / approxHalfLife_s`
+	 * 
+	 * `strength = damping * damping / 4`
+	 */
+	Critical(approxHalfLife_s: Float);
+
+	Custom(strength: Float, damping: Float);
 
 }

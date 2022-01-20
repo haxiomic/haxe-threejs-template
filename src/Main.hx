@@ -1,11 +1,10 @@
-import app.InteractionEventsManager;
+import event.ViewEventManager;
 import environment.EnvironmentManager;
 import rendering.BackgroundEnvironment;
 import three.PlaneGeometry;
 import three.Scene;
 import three.Uniform;
 import three.examples.jsm.loaders.gltfloader.GLTFLoader;
-import tool.CompileTime;
 import ui.DevUI;
 
 // settings
@@ -46,10 +45,10 @@ final gl = renderer.getContext();
 
 final scene = new Scene();
 
-final eventManager = new InteractionEventsManager(canvas);
+final eventManager = new ViewEventManager(canvas);
 
 final arcBallControl = new control.ArcBallControl({
-	interactionEventsManager: eventManager,
+	viewEventManager: eventManager,
 	radius: 4.,
 	dragSpeed: 4.,
 	zoomSpeed: 1.,
@@ -141,8 +140,7 @@ function animationFrame(time_ms: Float) {
 }
 
 function update(time_s: Float, dt_s: Float) {
-	arcBallControl.step(dt_s);
-	arcBallControl.applyToCamera(camera);
+	arcBallControl.update(camera, dt_s);
 }
 
 function initDevUI() {

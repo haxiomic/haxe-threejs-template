@@ -1,4 +1,4 @@
-package app.event;
+package event;
 
 /**
 	See https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent
@@ -41,6 +41,9 @@ class WheelEvent {
 	final ctrlKey: Bool;
 	final metaKey: Bool;
 	final shiftKey: Bool;
+
+	final preventDefault: () -> Void;
+	final defaultPrevented: () -> Bool;
 
 	/**
 		Reference to original native event object – type varies between platform
