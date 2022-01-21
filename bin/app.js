@@ -21,6 +21,7 @@ HxOverrides.__name__ = true;
 class event_ViewEventManager {
 	constructor(el) {
 		this.appActivated = false;
+		this.useCapture = true;
 		this.activePointerCount = 0;
 		this.activePointers = new haxe_ds_IntMap();
 		this.el = el;
@@ -46,13 +47,17 @@ class event_ViewEventManager {
 		switch(window.document.visibilityState) {
 		case "hidden":
 			if(this.appActivated) {
-				this.eventHandler.onDeactivate();
+				let _g = 0;
+				let _g1 = this.eventHandler.onDeactivateCallbacks;
+				while(_g < _g1.length) _g1[_g++]();
 				this.appActivated = false;
 			}
 			break;
 		case "visible":
 			if(!this.appActivated) {
-				this.eventHandler.onActivate();
+				let _g = 0;
+				let _g1 = this.eventHandler.onActivateCallbacks;
+				while(_g < _g1.length) _g1[_g++]();
 				this.appActivated = true;
 			}
 			break;
@@ -64,7 +69,7 @@ class event_ViewEventManager {
 			let force = mouseEvent.force != null ? mouseEvent.force : mouseEvent.webkitForce != null ? mouseEvent.webkitForce : 0.5;
 			pointerMethod(new event_PointerEvent(mouseEvent.button,$bind(mouseEvent,mouseEvent.preventDefault),function() {
 				return mouseEvent.defaultPrevented;
-			},mouseEvent,1,"mouse",true,mouseEvent.buttons,mouseEvent.clientX,mouseEvent.clientY,1,1,_gthis.el.clientWidth,_gthis.el.clientHeight,Math.max(force - 1,0),0,0,0,0));
+			},mouseEvent.timeStamp,mouseEvent.target == _gthis.el,mouseEvent,1,"mouse",true,mouseEvent.buttons,mouseEvent.clientX,mouseEvent.clientY,1,1,_gthis.el.clientWidth,_gthis.el.clientHeight,Math.max(force - 1,0),0,0,0,0));
 		};
 		let touchInfoForType_h = Object.create(null);
 		let getTouchInfoForType = function(type) {
@@ -134,7 +139,7 @@ class event_ViewEventManager {
 				let _g11 = isFinite(tiltX) ? tiltX : 0;
 				pointerMethod(new event_PointerEvent(_g4,$bind(touchEvent,touchEvent.preventDefault),function() {
 					return touchEvent.defaultPrevented;
-				},touchEvent,_g1,_g2,_g3,_g5,_g6,_g7,radiusX * 2,radiusY * 2,_g8,_g9,_g10,0,_g11,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle));
+				},touchEvent.timeStamp,touchEvent.target == _gthis.el,touchEvent,_g1,_g2,_g3,_g5,_g6,_g7,radiusX * 2,radiusY * 2,_g8,_g9,_g10,0,_g11,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle));
 			}
 		};
 		let updatePointerState = function(e) {
@@ -163,20 +168,18 @@ class event_ViewEventManager {
 			}
 		};
 		let onPointerDown = function(e) {
-			e["viewWidth"] = _gthis.el.clientWidth;
-			e["viewHeight"] = _gthis.el.clientHeight;
 			updatePointerState(e);
-			_gthis.eventHandler.onPointerDown(e);
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onPointerDownCallbacks;
+			while(_g < _g1.length) _g1[_g++](e);
 		};
 		let onPointerMove = function(e) {
-			e["viewWidth"] = _gthis.el.clientWidth;
-			e["viewHeight"] = _gthis.el.clientHeight;
 			updatePointerState(e);
-			_gthis.eventHandler.onPointerMove(e);
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onPointerMoveCallbacks;
+			while(_g < _g1.length) _g1[_g++](e);
 		};
 		let onPointerUp = function(e) {
-			e["viewWidth"] = _gthis.el.clientWidth;
-			e["viewHeight"] = _gthis.el.clientHeight;
 			switch(e.pointerType) {
 			case "mouse":
 				updatePointerState(e);
@@ -185,11 +188,11 @@ class event_ViewEventManager {
 				removePointerState(e);
 				break;
 			}
-			_gthis.eventHandler.onPointerUp(e);
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onPointerUpCallbacks;
+			while(_g < _g1.length) _g1[_g++](e);
 		};
 		let onPointerCancel = function(e) {
-			e["viewWidth"] = _gthis.el.clientWidth;
-			e["viewHeight"] = _gthis.el.clientHeight;
 			switch(e.pointerType) {
 			case "mouse":
 				updatePointerState(e);
@@ -198,61 +201,81 @@ class event_ViewEventManager {
 				removePointerState(e);
 				break;
 			}
-			_gthis.eventHandler.onPointerCancel(e);
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onPointerCancelCallbacks;
+			while(_g < _g1.length) _g1[_g++](e);
 		};
 		if(window.PointerEvent) {
-			this.el.addEventListener("pointerdown",function(e) {
-				e["nativeEvent"] = e;
-				onPointerDown(e);
-			});
-			window.addEventListener("pointermove",function(e) {
-				e["nativeEvent"] = e;
-				onPointerMove(e);
-			});
+			window.addEventListener("pointerdown",function(e) {
+				let e1 = e;
+				onPointerDown(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+					return e1.defaultPrevented;
+				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+			},this.useCapture);
+			if(PointerEvent.prototype.getCoalescedEvents != null) {
+				window.addEventListener("pointermove",function(e) {
+					let _g = 0;
+					let _g1 = e.getCoalescedEvents();
+					while(_g < _g1.length) {
+						let e = _g1[_g++];
+						onPointerMove(new event_PointerEvent(e.button,$bind(e,e.preventDefault),function() {
+							return e.defaultPrevented;
+						},e.timeStamp,e.target == _gthis.el,e,e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x,e.y,e.width,e.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist));
+					}
+				},this.useCapture);
+			} else {
+				window.addEventListener("pointermove",function(e) {
+					let e1 = e;
+					onPointerMove(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+						return e1.defaultPrevented;
+					},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},this.useCapture);
+			}
 			window.addEventListener("pointerup",function(e) {
-				e["nativeEvent"] = e;
-				onPointerUp(e);
-			});
+				let e1 = e;
+				onPointerUp(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+					return e1.defaultPrevented;
+				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+			},this.useCapture);
 			window.addEventListener("pointercancel",function(e) {
-				e["nativeEvent"] = e;
-				onPointerCancel(e);
-			});
+				let e1 = e;
+				onPointerCancel(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+					return e1.defaultPrevented;
+				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+			},this.useCapture);
 		} else {
-			this.el.addEventListener("mousedown",function(e) {
+			window.addEventListener("mousedown",function(e) {
 				executePointerMethodFromMouseEvent(e,onPointerDown);
-			});
+			},this.useCapture);
 			window.addEventListener("mousemove",function(e) {
 				executePointerMethodFromMouseEvent(e,onPointerMove);
-			});
+			},this.useCapture);
 			window.addEventListener("webkitmouseforcechanged",function(e) {
 				executePointerMethodFromMouseEvent(e,onPointerMove);
-			});
-			window.addEventListener("mouseforcechanged",function(e) {
-				executePointerMethodFromMouseEvent(e,onPointerMove);
-			});
+			},this.useCapture);
 			window.addEventListener("mouseup",function(e) {
 				executePointerMethodFromMouseEvent(e,onPointerUp);
-			});
-			this.el.addEventListener("touchstart",function(e) {
+			},this.useCapture);
+			window.addEventListener("touchstart",function(e) {
 				executePointerMethodFromTouchEvent(e,onPointerDown);
-			},{ capture : true, passive : false});
+			},{ capture : this.useCapture, passive : false});
 			window.addEventListener("touchmove",function(e) {
 				executePointerMethodFromTouchEvent(e,onPointerMove);
-			},{ capture : true, passive : false});
+			},{ capture : this.useCapture, passive : false});
 			window.addEventListener("touchforcechange",function(e) {
 				executePointerMethodFromTouchEvent(e,onPointerMove);
-			},{ capture : true, passive : false});
+			},{ capture : this.useCapture, passive : false});
 			window.addEventListener("touchend",function(e) {
 				executePointerMethodFromTouchEvent(e,onPointerUp);
-			},{ capture : true, passive : false});
+			},{ capture : this.useCapture, passive : false});
 			window.addEventListener("touchcancel",function(e) {
 				executePointerMethodFromTouchEvent(e,onPointerCancel);
-			},{ capture : true, passive : false});
+			},{ capture : this.useCapture, passive : false});
 		}
 	}
 	addWheelEventListeners() {
 		let _gthis = this;
-		this.el.addEventListener("wheel",function(e) {
+		window.addEventListener("wheel",function(e) {
 			let x_px = e.clientX;
 			let y_px = e.clientY;
 			let deltaX_px = e.deltaX;
@@ -275,18 +298,29 @@ class event_ViewEventManager {
 				deltaZ_px = e.deltaZ * 100;
 				break;
 			}
-			_gthis.eventHandler.onWheel(new event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px,y_px,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,$bind(e,e.preventDefault),function() {
+			let event = new event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px,y_px,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,$bind(e,e.preventDefault),function() {
 				return e.defaultPrevented;
-			},e));
-		},{ passive : false});
+			},e.timeStamp,e.target == _gthis.el,e);
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onWheelCallbacks;
+			while(_g < _g1.length) _g1[_g++](event);
+		},{ passive : false, capture : this.useCapture});
 	}
 	addKeyboardEventListeners() {
 		let _gthis = this;
 		window.addEventListener("keydown",function(e) {
-			_gthis.eventHandler.onKeyDown(e,e.target == _gthis.el);
+			let hasFocus = e.target == _gthis.el;
+			let event = e;
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onKeyDownCallbacks;
+			while(_g < _g1.length) _g1[_g++](event,hasFocus);
 		});
 		window.addEventListener("keyup",function(e) {
-			_gthis.eventHandler.onKeyUp(e,e.target == _gthis.el);
+			let hasFocus = e.target == _gthis.el;
+			let event = e;
+			let _g = 0;
+			let _g1 = _gthis.eventHandler.onKeyUpCallbacks;
+			while(_g < _g1.length) _g1[_g++](event,hasFocus);
 		});
 	}
 	addLifeCycleEventListeners() {
@@ -309,56 +343,11 @@ class event__$ViewEventManager_EventDispatcher {
 		this.onPointerMoveCallbacks = [];
 		this.onPointerDownCallbacks = [];
 	}
-	onPointerDown(event) {
-		let _g = 0;
-		let _g1 = this.onPointerDownCallbacks;
-		while(_g < _g1.length) _g1[_g++](event);
-	}
-	onPointerMove(event) {
-		let _g = 0;
-		let _g1 = this.onPointerMoveCallbacks;
-		while(_g < _g1.length) _g1[_g++](event);
-	}
-	onPointerUp(event) {
-		let _g = 0;
-		let _g1 = this.onPointerUpCallbacks;
-		while(_g < _g1.length) _g1[_g++](event);
-	}
-	onPointerCancel(event) {
-		let _g = 0;
-		let _g1 = this.onPointerCancelCallbacks;
-		while(_g < _g1.length) _g1[_g++](event);
-	}
-	onWheel(event) {
-		let _g = 0;
-		let _g1 = this.onWheelCallbacks;
-		while(_g < _g1.length) _g1[_g++](event);
-	}
-	onKeyDown(event,hasFocus) {
-		let _g = 0;
-		let _g1 = this.onKeyDownCallbacks;
-		while(_g < _g1.length) _g1[_g++](event,hasFocus);
-	}
-	onKeyUp(event,hasFocus) {
-		let _g = 0;
-		let _g1 = this.onKeyUpCallbacks;
-		while(_g < _g1.length) _g1[_g++](event,hasFocus);
-	}
-	onActivate() {
-		let _g = 0;
-		let _g1 = this.onActivateCallbacks;
-		while(_g < _g1.length) _g1[_g++]();
-	}
-	onDeactivate() {
-		let _g = 0;
-		let _g1 = this.onDeactivateCallbacks;
-		while(_g < _g1.length) _g1[_g++]();
-	}
 }
 event__$ViewEventManager_EventDispatcher.__name__ = true;
 class control_ArcBallControl {
 	constructor(options) {
-		this._isPointerDown = false;
+		this._drivingPointerId = null;
 		this._onDown_clientXY = new Vec2Data(0,0);
 		this._onDown_angleAroundXZ = 0;
 		this._onDown_angleAroundY = 0;
@@ -387,116 +376,64 @@ class control_ArcBallControl {
 		this.angleAroundY.forceCompletion(options.angleAroundY != null ? options.angleAroundY : a.angleAroundY);
 		this.angleAroundXZ.forceCompletion(options_angleAroundXZ);
 		this.radius.forceCompletion(options_radius);
-		let interactionSurface = options_interactionSurface;
+		let viewEventManager = options_viewEventManager;
+		if(options_viewEventManager == null && options_interactionSurface != null) {
+			viewEventManager = new event_ViewEventManager(options_interactionSurface);
+		}
 		let _gthis = this;
-		if(options_viewEventManager != null) {
-			options_viewEventManager.eventHandler.onPointerDownCallbacks.push(function(e) {
-				_gthis._isPointerDown = true;
-				_gthis._onDown_angleAroundY = _gthis.angleAroundY.target;
-				_gthis._onDown_angleAroundXZ = _gthis.angleAroundXZ.target;
-				let this1 = _gthis._onDown_clientXY;
-				this1.x = e.x;
-				this1.y = e.y;
-			});
+		if(viewEventManager != null) {
+			viewEventManager.eventHandler.onPointerDownCallbacks.push($bind(this,this.handlePointerDown));
+			viewEventManager.eventHandler.onPointerMoveCallbacks.push($bind(this,this.handlePointerMove));
+			viewEventManager.eventHandler.onPointerUpCallbacks.push($bind(this,this.handlePointerUp));
+			viewEventManager.eventHandler.onPointerCancelCallbacks.push($bind(this,this.handlePointerUp));
 			let cb = function(e) {
-				let x = e.viewWidth;
-				let y = e.viewHeight;
-				let cb;
-				if(_gthis._isPointerDown) {
-					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.y / y - a.y / y) * _gthis.dragSpeed;
-					let this1 = _gthis.orientation;
-					let v_x = 0;
-					let v_y = 1;
-					let v_z = 0;
-					let x1 = this1.x;
-					let y1 = this1.y;
-					let z = this1.z;
-					let s = this1.w;
-					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * _gthis.dragSpeed * (x / y);
-					cb = 0;
-				} else {
-					cb = 1;
-				}
-				if(cb == 0) {
+				if(e.onTargetView && _gthis.zoomSpeed > 0) {
+					_gthis.radius.target += e.deltaY * _gthis.zoomSpeed / 1000;
+					_gthis.radius.target = Math.max(_gthis.radius.target,0);
 					e.preventDefault();
+					e.nativeEvent.stopPropagation();
 				}
 			};
-			options_viewEventManager.eventHandler.onPointerMoveCallbacks.push(cb);
-			options_viewEventManager.eventHandler.onPointerUpCallbacks.push(function(e) {
-				_gthis._isPointerDown = false;
-			});
-			let cb1 = function(e) {
-				_gthis.radius.target += e.deltaY * _gthis.zoomSpeed / 1000;
-				_gthis.radius.target = Math.max(_gthis.radius.target,0);
-				e.preventDefault();
-			};
-			options_viewEventManager.eventHandler.onWheelCallbacks.push(cb1);
-		} else if(interactionSurface != null) {
-			interactionSurface.addEventListener("mousedown",function(e) {
-				_gthis._isPointerDown = true;
-				_gthis._onDown_angleAroundY = _gthis.angleAroundY.target;
-				_gthis._onDown_angleAroundXZ = _gthis.angleAroundXZ.target;
-				let this1 = _gthis._onDown_clientXY;
-				this1.x = e.clientX;
-				this1.y = e.clientY;
-			});
-			interactionSurface.addEventListener("contextmenu",function(e) {
-				_gthis._isPointerDown = false;
-			});
-			window.addEventListener("mousemove",function(e) {
-				let x = interactionSurface.clientWidth;
-				let y = interactionSurface.clientHeight;
-				let tmp;
-				if(_gthis._isPointerDown) {
-					let a = _gthis._onDown_clientXY;
-					_gthis.angleAroundXZ.target = _gthis._onDown_angleAroundXZ + (e.clientY / y - a.y / y) * _gthis.dragSpeed;
-					let this1 = _gthis.orientation;
-					let v_x = 0;
-					let v_y = 1;
-					let v_z = 0;
-					let x1 = this1.x;
-					let y1 = this1.y;
-					let z = this1.z;
-					let s = this1.w;
-					let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
-					_gthis.angleAroundY.target = _gthis._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.clientX / x - a.x / x) * _gthis.dragSpeed * (x / y);
-					tmp = 0;
-				} else {
-					tmp = 1;
-				}
-				if(tmp == 0) {
-					e.preventDefault();
-				}
-			});
-			window.addEventListener("mouseup",function(e) {
-				_gthis._isPointerDown = false;
-			});
-			interactionSurface.addEventListener("wheel",function(e) {
-				_gthis.radius.target += e.deltaY * _gthis.zoomSpeed / 1000;
-				_gthis.radius.target = Math.max(_gthis.radius.target,0);
-				e.preventDefault();
-			},{ passive : false});
+			viewEventManager.eventHandler.onWheelCallbacks.push(cb);
+		}
+	}
+	handlePointerDown(e) {
+		if(e.onTargetView && e.button == 0 && e.isPrimary) {
+			this._drivingPointerId = e.pointerId;
+			this._onDown_angleAroundY = this.angleAroundY.target;
+			this._onDown_angleAroundXZ = this.angleAroundXZ.target;
+			this._onDown_clientXY.x = e.x;
+			this._onDown_clientXY.y = e.y;
+			e.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+	}
+	handlePointerMove(e) {
+		if(e.pointerId == this._drivingPointerId) {
+			let surfaceSize_x = e.viewWidth;
+			let surfaceSize_y = e.viewHeight;
+			let a = this._onDown_clientXY;
+			this.angleAroundXZ.target = this._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * this.dragSpeed;
+			let this1 = this.orientation;
+			let u_x = this1.x;
+			let u_y = this1.y;
+			let u_z = this1.z;
+			let s = this1.w;
+			let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
+			this.angleAroundY.target = this._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * this.dragSpeed * (e.viewWidth / e.viewHeight);
+			e.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+	}
+	handlePointerUp(e) {
+		if(e.pointerId == this._drivingPointerId) {
+			this._drivingPointerId = null;
+			e.preventDefault();
+			e.nativeEvent.stopPropagation();
 		}
 	}
 }
 control_ArcBallControl.__name__ = true;
-class Vec2Data {
-	constructor(x,y) {
-		this.x = x;
-		this.y = y;
-	}
-}
-Vec2Data.__name__ = true;
-class Vec3Data {
-	constructor(x,y,z) {
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
-}
-Vec3Data.__name__ = true;
 Math.__name__ = true;
 var three_Mesh = require("three").Mesh;
 class rendering_BackgroundEnvironment extends three_Mesh {
@@ -858,15 +795,15 @@ function Main_animationFrame(time_ms) {
 	Main_uTime_s.value = time_s;
 	let gl = Main_renderer.getContext();
 	let x = window.innerWidth;
-	let y = window.innerHeight;
+	let a_y = window.innerHeight;
 	let b = Main_pixelRatio;
-	let x1 = Math.floor(x * b);
-	let y1 = Math.floor(y * b);
-	if(!(x1 == gl.drawingBufferWidth && y1 == gl.drawingBufferHeight)) {
-		Main_canvas.width = Math.floor(x1);
-		Main_canvas.height = Math.floor(y1);
+	let targetSize_x = Math.floor(x * b);
+	let targetSize_y = Math.floor(a_y * b);
+	if(!(targetSize_x == gl.drawingBufferWidth && targetSize_y == gl.drawingBufferHeight)) {
+		Main_canvas.width = Math.floor(targetSize_x);
+		Main_canvas.height = Math.floor(targetSize_y);
 	}
-	let newAspect = x1 / y1;
+	let newAspect = targetSize_x / targetSize_y;
 	if(Main_camera.aspect != newAspect) {
 		Main_camera.aspect = newAspect;
 		Main_camera.updateProjectionMatrix();
@@ -894,31 +831,31 @@ function Main_update(time_s,dt_s) {
 	let denominator = lenSq == 0.0 ? 1.0 : Math.sqrt(lenSq);
 	let angle = _this.axialRotation.value;
 	let sa = Math.sin(angle * 0.5);
-	let x = v.x / denominator * sa;
-	let y = v.y / denominator * sa;
-	let z = v.z / denominator * sa;
-	let w = Math.cos(angle * 0.5);
+	let axial_x = v.x / denominator * sa;
+	let axial_y = v.y / denominator * sa;
+	let axial_z = v.z / denominator * sa;
+	let axial_w = Math.cos(angle * 0.5);
 	let angle1 = _this.angleAroundY.value;
 	let sa1 = Math.sin(angle1 * 0.5);
-	let x1 = 0 * sa1;
-	let y1 = 1 * sa1;
-	let z1 = 0 * sa1;
-	let w1 = Math.cos(angle1 * 0.5);
+	let aY_x = 0. * sa1;
+	let aY_y = sa1;
+	let aY_z = 0. * sa1;
+	let aY_w = Math.cos(angle1 * 0.5);
 	let angle2 = -_this.angleAroundXZ.value;
 	let sa2 = Math.sin(angle2 * 0.5);
-	let x2 = 1 * sa2;
-	let y2 = 0 * sa2;
-	let z2 = 0 * sa2;
-	let w2 = Math.cos(angle2 * 0.5);
-	let this11 = _this.orientation;
-	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
-	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
-	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
-	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
-	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
-	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
-	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
-	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
+	let aXZ_x = sa2;
+	let aXZ_y = 0. * sa2;
+	let aXZ_z = 0. * sa2;
+	let aXZ_w = Math.cos(angle2 * 0.5);
+	let this2 = _this.orientation;
+	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
+	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
+	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
+	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
+	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
+	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
+	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
+	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
 	let a = _this.position;
 	let b = _this.target;
 	let q = _this.orientation;
@@ -1032,17 +969,17 @@ function Main_initDevUI() {
 	let _this = options;
 	let result = new Array(_this.length);
 	let _g4 = 0;
-	let _g11 = _this.length;
-	while(_g4 < _g11) {
+	let _g5 = _this.length;
+	while(_g4 < _g5) {
 		let i = _g4++;
 		result[i] = Std.string(_this[i]);
 	}
 	let values2 = options;
 	let obj2 = { };
-	let _g5 = 0;
-	let _g6 = result.length;
-	while(_g5 < _g6) {
-		let i = _g5++;
+	let _g6 = 0;
+	let _g7 = result.length;
+	while(_g6 < _g7) {
+		let i = _g6++;
 		obj2[result[i]] = values2[i];
 	}
 	let o6 = { };
@@ -1163,6 +1100,21 @@ function Structure_extendAny(base,extendWidth) {
 	}
 	return extended;
 }
+class Vec2Data {
+	constructor(x,y) {
+		this.x = x;
+		this.y = y;
+	}
+}
+Vec2Data.__name__ = true;
+class Vec3Data {
+	constructor(x,y,z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	}
+}
+Vec3Data.__name__ = true;
 class Vec4Data {
 	constructor(x,y,z,w) {
 		this.x = x;
@@ -1286,17 +1238,19 @@ class event_PointerState {
 }
 event_PointerState.__name__ = true;
 class event_PointerEvent extends event_PointerState {
-	constructor(button,preventDefault,defaultPrevented,nativeEvent,pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
+	constructor(button,preventDefault,defaultPrevented,timeStamp,onTargetView,nativeEvent,pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
 		super(pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist);
 		this.button = button;
 		this.preventDefault = preventDefault;
 		this.defaultPrevented = defaultPrevented;
+		this.timeStamp = timeStamp;
+		this.onTargetView = onTargetView;
 		this.nativeEvent = nativeEvent;
 	}
 }
 event_PointerEvent.__name__ = true;
 class event_WheelEvent {
-	constructor(deltaX,deltaY,deltaZ,x,y,altKey,ctrlKey,metaKey,shiftKey,preventDefault,defaultPrevented,nativeEvent) {
+	constructor(deltaX,deltaY,deltaZ,x,y,altKey,ctrlKey,metaKey,shiftKey,preventDefault,defaultPrevented,timeStamp,onTargetView,nativeEvent) {
 		this.deltaX = deltaX;
 		this.deltaY = deltaY;
 		this.deltaZ = deltaZ;
@@ -1308,6 +1262,8 @@ class event_WheelEvent {
 		this.shiftKey = shiftKey;
 		this.preventDefault = preventDefault;
 		this.defaultPrevented = defaultPrevented;
+		this.timeStamp = timeStamp;
+		this.onTargetView = onTargetView;
 		this.nativeEvent = nativeEvent;
 	}
 }

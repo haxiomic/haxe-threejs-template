@@ -45,6 +45,9 @@ class WheelEvent {
 	final preventDefault: () -> Void;
 	final defaultPrevented: () -> Bool;
 
+	final timeStamp: Float;
+	final onTargetView: Bool;
+
 	/**
 		Reference to original native event object – type varies between platform
 	**/

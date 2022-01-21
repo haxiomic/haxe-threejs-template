@@ -59,6 +59,13 @@ class PointerEvent extends PointerState {
 
 	final preventDefault: () -> Void;
 	final defaultPrevented: () -> Bool;
+	
+	final timeStamp: Float;
+
+	/**
+		True if the event occurred while the view was the target (not part of PointerEvent specification)
+	**/
+	final onTargetView: Bool;
 
 	/**
 		Reference to original native event object – type varies between platform

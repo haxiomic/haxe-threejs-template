@@ -47,7 +47,7 @@ class DevUI extends ExposedGUI {
 	public macro function addDropdown<T>(self: Expr, target:ExprOf<T>, ?values: ExprOf< EitherType<Array<T>, Map<String, T>> > ): ExprOf<GUIController> { }
 	public macro function add<T>(g: Expr, prop: ExprOf<T>, ?min: ExprOf<Float>, ?max: ExprOf<Float>): ExprOf<GUIController> {}
 
-	function internalAddMaterial(material: Material, ?fallbackName: String): DevUI {
+	static function internalAddMaterial(g: DevUI, material: Material, ?fallbackName: String): DevUI {
 		var name = if (material.name == null || material.name == "") {
 			fallbackName;
 		} else {
@@ -55,7 +55,7 @@ class DevUI extends ExposedGUI {
 		}
 
 		// deduplicate folder names (disallowed by dat.GUI)
-		while (Reflect.hasField(internal.__folders, name)) {
+		while (Reflect.hasField(g.internal.__folders, name)) {
 			var endNumReg = ~/(\d)+$/;
 			name = if (endNumReg.match(name)) {
 				var num = Std.parseInt(endNumReg.matched(1));
@@ -64,7 +64,7 @@ class DevUI extends ExposedGUI {
 				name + '2';
 			}
 		}
-		var g = addFolder(name);
+		var g = g.addFolder(name);
 		var m = material;
 
 		var type = 'Material';
@@ -261,7 +261,7 @@ class DevUI {
 	public macro function addMaterial(self: Expr, material: ExprOf<Material>): ExprOf<GUIController> {
 		var fallbackName = expressionName(material);
 		return macro {
-			@:privateAccess $self.internalAddMaterial($material, $v{fallbackName});
+			@:privateAccess ui.DevUI.internalAddMaterial($self, $material, $v{fallbackName});
 		}
 	}
 

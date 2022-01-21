@@ -27,7 +27,7 @@ class ViewEventManager {
 	public var activePointerCount(default, null) = 0;
 
 	final eventHandler: EventDispatcher;
-
+	final useCapture = true;
 
 	public function new(el: Element) {
 		this.el = el;
@@ -203,7 +203,9 @@ class ViewEventManager {
 				twist: 0,
 				preventDefault: mouseEvent.preventDefault,
 				defaultPrevented: () -> mouseEvent.defaultPrevented,
+				timeStamp: mouseEvent.timeStamp,
 				nativeEvent: mouseEvent,
+				onTargetView: mouseEvent.target == el,
 			});
 		}
 
@@ -299,7 +301,9 @@ class ViewEventManager {
 					twist: touch.rotationAngle,
 					preventDefault: touchEvent.preventDefault,
 					defaultPrevented: () -> touchEvent.defaultPrevented,
+					timeStamp: touchEvent.timeStamp,
 					nativeEvent: touchEvent,
+					onTargetView: touchEvent.target == el,
 				});
 			}
 		}
@@ -308,7 +312,7 @@ class ViewEventManager {
 			var existingPointer = activePointers.get(e.pointerId);
 			if (existingPointer != null) {
 				// copy state
-				Structure.copyFields(e, existingPointer, {exclude: ['pointerId', 'pointerType', 'isPrimary', 'button', 'preventDefault', 'defaultPrevented', 'nativeEvent']});
+				Structure.copyFields(e, existingPointer, {exclude: ['pointerId', 'pointerType', 'isPrimary', 'button', 'preventDefault', 'defaultPrevented', 'nativeEvent', 'timeStamp', 'onTargetView']});
 			} else {
 				// add new state
 				activePointers.set(e.pointerId, {
@@ -339,25 +343,16 @@ class ViewEventManager {
 		}
 
 		var onPointerDown = (e: PointerEvent) -> {
-			Reflect.setField(e, 'viewWidth', el.clientWidth);
-			Reflect.setField(e, 'viewHeight', el.clientHeight);
-
 			updatePointerState(e);
 
 			eventHandler.onPointerDown(e);
 		};
 		var onPointerMove = (e: PointerEvent) -> {
-			Reflect.setField(e, 'viewWidth', el.clientWidth);
-			Reflect.setField(e, 'viewHeight', el.clientHeight);
-
 			updatePointerState(e);
 
 			eventHandler.onPointerMove(e);
 		};
 		var onPointerUp = (e: PointerEvent) -> {
-			Reflect.setField(e, 'viewWidth', el.clientWidth);
-			Reflect.setField(e, 'viewHeight', el.clientHeight);
-
 			switch e.pointerType {
 				case MOUSE:
 					updatePointerState(e);
@@ -368,9 +363,6 @@ class ViewEventManager {
 			eventHandler.onPointerUp(e);
 		};
 		var onPointerCancel = (e: PointerEvent) -> {
-			Reflect.setField(e, 'viewWidth', el.clientWidth);
-			Reflect.setField(e, 'viewHeight', el.clientHeight);
-
 			switch e.pointerType {
 				case MOUSE:
 					updatePointerState(e);
@@ -383,39 +375,62 @@ class ViewEventManager {
 
 		// use PointerEvent API if supported
 		if (js.Syntax.field(window, 'PointerEvent')) {
-			el.addEventListener('pointerdown', (e) -> {
-				Reflect.setField(e, 'nativeEvent', e);
-				onPointerDown(e);
-			});
-			window.addEventListener('pointermove', (e) -> {
-				Reflect.setField(e, 'nativeEvent', e);
-				onPointerMove(e);
-			});
-			window.addEventListener('pointerup', (e) -> {
-				Reflect.setField(e, 'nativeEvent', e);
-				onPointerUp(e);
-			});
-			window.addEventListener('pointercancel', (e) -> {
-				Reflect.setField(e, 'nativeEvent', e);
-				onPointerCancel(e);
-			});
+			inline function convertPointerEvent(e: js.html.PointerEvent): PointerEvent {
+				return {
+					button: e.button,
+					buttons: e.buttons,
+					height: e.height,
+					isPrimary: e.isPrimary,
+					pointerId: e.pointerId,
+					pointerType: e.pointerType,
+					pressure: e.pressure,
+					tangentialPressure: e.tangentialPressure,
+					tiltX: e.tiltX,
+					tiltY: e.tiltY,
+					timeStamp: e.timeStamp,
+					twist: e.twist,
+					viewHeight: el.clientHeight,
+					viewWidth: el.clientWidth,
+					width: e.width,
+					x: e.x,
+					y: e.y,
+					defaultPrevented: () -> e.defaultPrevented,
+					preventDefault: e.preventDefault,
+					onTargetView: e.target == el,
+					nativeEvent: e,
+				}
+			}
+			window.addEventListener('pointerdown', (e: js.html.PointerEvent) -> onPointerDown(convertPointerEvent(e)), useCapture);
+			// check for getCoalescedEvent() support
+			var supportsCoalescedEvents = js.Syntax.code('PointerEvent.prototype.getCoalescedEvents') != null;
+			if (supportsCoalescedEvents) {
+				window.addEventListener('pointermove', (e: js.html.PointerEvent) -> {
+					for (e in e.getCoalescedEvents()) {
+						onPointerMove(convertPointerEvent(e));
+					}
+				}, useCapture);
+			} else {
+				window.addEventListener('pointermove', (e: js.html.PointerEvent) -> onPointerMove(convertPointerEvent(e)), useCapture);
+			}
+			window.addEventListener('pointerup', (e: js.html.PointerEvent) -> onPointerUp(convertPointerEvent(e)), useCapture);
+			window.addEventListener('pointercancel', (e: js.html.PointerEvent) -> onPointerCancel(convertPointerEvent(e)), useCapture);
 		} else {
-			el.addEventListener('mousedown', (e) -> executePointerMethodFromMouseEvent(e, onPointerDown));
-			window.addEventListener('mousemove', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove));
-			window.addEventListener('webkitmouseforcechanged', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove));
-			window.addEventListener('mouseforcechanged', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove));
-			window.addEventListener('mouseup', (e) -> executePointerMethodFromMouseEvent(e, onPointerUp));
-			var useCapture = true;
-			el.addEventListener('touchstart', (e) -> executePointerMethodFromTouchEvent(e, onPointerDown), { capture: useCapture, passive: false }); // passive: false
-			window.addEventListener('touchmove', (e) -> executePointerMethodFromTouchEvent(e, onPointerMove), { capture: useCapture, passive: false }); // passive: false
-			window.addEventListener('touchforcechange', (e) -> executePointerMethodFromTouchEvent(e, onPointerMove), { capture: useCapture, passive: false }); // passive: true
-			window.addEventListener('touchend', (e) -> executePointerMethodFromTouchEvent(e, onPointerUp), {capture: useCapture, passive: false }); // passive: true
-			window.addEventListener('touchcancel', (e) -> executePointerMethodFromTouchEvent(e, onPointerCancel), { capture: useCapture, passive: false }); // passive: true
+			window.addEventListener('mousedown', (e) -> executePointerMethodFromMouseEvent(e, onPointerDown), useCapture);
+			window.addEventListener('mousemove', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove), useCapture);
+			window.addEventListener('webkitmouseforcechanged', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove), useCapture);
+			// window.addEventListener('mouseforcechanged', (e) -> executePointerMethodFromMouseEvent(e, onPointerMove), useCapture);
+			window.addEventListener('mouseup', (e) -> executePointerMethodFromMouseEvent(e, onPointerUp), useCapture);
+
+			window.addEventListener('touchstart', (e) -> executePointerMethodFromTouchEvent(e, onPointerDown), { capture: useCapture, passive: false }); 
+			window.addEventListener('touchmove', (e) -> executePointerMethodFromTouchEvent(e, onPointerMove), { capture: useCapture, passive: false }); 
+			window.addEventListener('touchforcechange', (e) -> executePointerMethodFromTouchEvent(e, onPointerMove), { capture: useCapture, passive: false });
+			window.addEventListener('touchend', (e) -> executePointerMethodFromTouchEvent(e, onPointerUp), {capture: useCapture, passive: false });
+			window.addEventListener('touchcancel', (e) -> executePointerMethodFromTouchEvent(e, onPointerCancel), { capture: useCapture, passive: false });
 		}
 	}
 
 	function addWheelEventListeners() {
-		el.addEventListener('wheel', (e: js.html.WheelEvent) -> {
+		window.addEventListener('wheel', (e: js.html.WheelEvent) -> {
 			// we normalize for delta modes, so we always scroll in px
 			// chrome always uses pixels but firefox can sometime uses lines and pages
 			// see https://stackoverflow.com/questions/20110224/what-is-the-height-of-a-line-in-a-wheel-event-deltamode-dom-delta-line
@@ -455,9 +470,12 @@ class ViewEventManager {
 				preventDefault: e.preventDefault,
 				defaultPrevented: () -> e.defaultPrevented,
 
+				onTargetView: e.target == el,
+				timeStamp: e.timeStamp,
+
 				nativeEvent: e,
 			});
-		}, { passive: false });
+		}, { passive: false, capture: useCapture });
 	}
 
 	function addKeyboardEventListeners() {
@@ -500,57 +518,57 @@ private class EventDispatcher {
 	public final onActivateCallbacks = new Array<() -> Void>();
 	public final onDeactivateCallbacks = new Array<() -> Void>();
 
-	public function new() {}
+	public inline function new() {}
 
-	public function onPointerDown(event: PointerEvent): Void {
+	public inline function onPointerDown(event: PointerEvent): Void {
 		for (cb in onPointerDownCallbacks) {
 			cb(event);
 		}
 	}
 
-	public function onPointerMove(event: PointerEvent): Void {
+	public inline function onPointerMove(event: PointerEvent): Void {
 		for (cb in onPointerMoveCallbacks) {
 			cb(event);
 		}
 	}
 
-	public function onPointerUp(event: PointerEvent): Void {
+	public inline function onPointerUp(event: PointerEvent): Void {
 		for (cb in onPointerUpCallbacks) {
 			cb(event);
 		}
 	}
 
-	public function onPointerCancel(event: PointerEvent): Void {
+	public inline function onPointerCancel(event: PointerEvent): Void {
 		for (cb in onPointerCancelCallbacks) {
 			cb(event);
 		}
 	}
 
-	public function onWheel(event: event.WheelEvent): Void {
+	public inline function onWheel(event: event.WheelEvent): Void {
 		for (cb in onWheelCallbacks) {
 			cb(event);
 		}
 	}
 
-	public function onKeyDown(event: event.KeyboardEvent, hasFocus: Bool): Void {
+	public inline function onKeyDown(event: event.KeyboardEvent, hasFocus: Bool): Void {
 		for (cb in onKeyDownCallbacks) {
 			cb(event, hasFocus);
 		}
 	}
 
-	public function onKeyUp(event: event.KeyboardEvent, hasFocus: Bool): Void {
+	public inline function onKeyUp(event: event.KeyboardEvent, hasFocus: Bool): Void {
 		for (cb in onKeyUpCallbacks) {
 			cb(event, hasFocus);
 		}
 	}
 
-	public function onActivate(): Void {
+	public inline function onActivate(): Void {
 		for (cb in onActivateCallbacks) {
 			cb();
 		}
 	}
 
-	public function onDeactivate(): Void {
+	public inline function onDeactivate(): Void {
 		for (cb in onDeactivateCallbacks) {
 			cb();
 		}
