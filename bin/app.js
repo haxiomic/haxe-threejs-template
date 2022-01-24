@@ -66,10 +66,11 @@ class event_ViewEventManager {
 	addPointerEventListeners() {
 		let _gthis = this;
 		let executePointerMethodFromMouseEvent = function(mouseEvent,pointerMethod) {
-			let force = mouseEvent.force != null ? mouseEvent.force : mouseEvent.webkitForce != null ? mouseEvent.webkitForce : 0.5;
+			let pressure = Math.max((mouseEvent.force != null ? mouseEvent.force : mouseEvent.webkitForce != null ? mouseEvent.webkitForce : 0.5) - 1,0);
+			let bounds = _gthis.el.getBoundingClientRect();
 			pointerMethod(new event_PointerEvent(mouseEvent.button,$bind(mouseEvent,mouseEvent.preventDefault),function() {
 				return mouseEvent.defaultPrevented;
-			},mouseEvent.timeStamp,mouseEvent.target == _gthis.el,mouseEvent,1,"mouse",true,mouseEvent.buttons,mouseEvent.clientX,mouseEvent.clientY,1,1,_gthis.el.clientWidth,_gthis.el.clientHeight,Math.max(force - 1,0),0,0,0,0));
+			},mouseEvent.timeStamp,mouseEvent,1,"mouse",true,mouseEvent.buttons,mouseEvent.clientX - bounds.left,mouseEvent.clientY - bounds.top,1,1,bounds.width,bounds.height,pressure,0,0,0,0));
 		};
 		let touchInfoForType_h = Object.create(null);
 		let getTouchInfoForType = function(type) {
@@ -126,20 +127,21 @@ class event_ViewEventManager {
 				let tiltY = Math.atan(Math.sin(touch.azimuthAngle) / tanAlt) * radToDeg;
 				let radiusX = touch.radiusX != null ? touch.radiusX : touch.webkitRadiusX != null ? touch.webkitRadiusX : 5;
 				let radiusY = touch.radiusY != null ? touch.radiusY : touch.webkitRadiusY != null ? touch.webkitRadiusY : 5;
+				let bounds = _gthis.el.getBoundingClientRect();
 				let _g1 = touch.identifier;
 				let _g2 = touch.touchType == "stylus" ? "pen" : "touch";
 				let _g3 = touch.identifier == touchInfo.primaryTouchIdentifier;
 				let _g4 = buttonStates.button;
 				let _g5 = buttonStates.buttons;
-				let _g6 = touch.clientX;
-				let _g7 = touch.clientY;
-				let _g8 = _gthis.el.clientWidth;
-				let _g9 = _gthis.el.clientHeight;
+				let _g6 = touch.clientX - bounds.left;
+				let _g7 = touch.clientY - bounds.top;
+				let _g8 = bounds.width;
+				let _g9 = bounds.height;
 				let _g10 = touch.force;
 				let _g11 = isFinite(tiltX) ? tiltX : 0;
 				pointerMethod(new event_PointerEvent(_g4,$bind(touchEvent,touchEvent.preventDefault),function() {
 					return touchEvent.defaultPrevented;
-				},touchEvent.timeStamp,touchEvent.target == _gthis.el,touchEvent,_g1,_g2,_g3,_g5,_g6,_g7,radiusX * 2,radiusY * 2,_g8,_g9,_g10,0,_g11,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle));
+				},touchEvent.timeStamp,touchEvent,_g1,_g2,_g3,_g5,_g6,_g7,radiusX * 2,radiusY * 2,_g8,_g9,_g10,0,_g11,isFinite(tiltY) ? tiltY : 0,touch.rotationAngle));
 			}
 		};
 		let updatePointerState = function(e) {
@@ -169,15 +171,17 @@ class event_ViewEventManager {
 		};
 		let onPointerDown = function(e) {
 			updatePointerState(e);
+			let onTargetView = e.nativeEvent.target == _gthis.el;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onPointerDownCallbacks;
-			while(_g < _g1.length) _g1[_g++](e);
+			while(_g < _g1.length) _g1[_g++](e,onTargetView);
 		};
 		let onPointerMove = function(e) {
 			updatePointerState(e);
+			let onTargetView = e.nativeEvent.target == _gthis.el;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onPointerMoveCallbacks;
-			while(_g < _g1.length) _g1[_g++](e);
+			while(_g < _g1.length) _g1[_g++](e,onTargetView);
 		};
 		let onPointerUp = function(e) {
 			switch(e.pointerType) {
@@ -188,9 +192,10 @@ class event_ViewEventManager {
 				removePointerState(e);
 				break;
 			}
+			let onTargetView = e.nativeEvent.target == _gthis.el;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onPointerUpCallbacks;
-			while(_g < _g1.length) _g1[_g++](e);
+			while(_g < _g1.length) _g1[_g++](e,onTargetView);
 		};
 		let onPointerCancel = function(e) {
 			switch(e.pointerType) {
@@ -201,47 +206,58 @@ class event_ViewEventManager {
 				removePointerState(e);
 				break;
 			}
+			let onTargetView = e.nativeEvent.target == _gthis.el;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onPointerCancelCallbacks;
-			while(_g < _g1.length) _g1[_g++](e);
+			while(_g < _g1.length) _g1[_g++](e,onTargetView);
 		};
 		if(window.PointerEvent) {
 			window.addEventListener("pointerdown",function(e) {
+				let onPointerDown1 = onPointerDown;
 				let e1 = e;
-				onPointerDown(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+				let bounds = _gthis.el.getBoundingClientRect();
+				onPointerDown1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 			if(PointerEvent.prototype.getCoalescedEvents != null) {
 				window.addEventListener("pointermove",function(e) {
 					let _g = 0;
 					let _g1 = e.getCoalescedEvents();
 					while(_g < _g1.length) {
+						let onPointerMove1 = onPointerMove;
 						let e = _g1[_g++];
-						onPointerMove(new event_PointerEvent(e.button,$bind(e,e.preventDefault),function() {
+						let bounds = _gthis.el.getBoundingClientRect();
+						onPointerMove1(new event_PointerEvent(e.button,$bind(e,e.preventDefault),function() {
 							return e.defaultPrevented;
-						},e.timeStamp,e.target == _gthis.el,e,e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x,e.y,e.width,e.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist));
+						},e.timeStamp,e,e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x - bounds.left,e.y - bounds.top,e.width,e.height,bounds.height,bounds.width,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist));
 					}
 				},this.useCapture);
 			} else {
 				window.addEventListener("pointermove",function(e) {
+					let onPointerMove1 = onPointerMove;
 					let e1 = e;
-					onPointerMove(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+					let bounds = _gthis.el.getBoundingClientRect();
+					onPointerMove1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 						return e1.defaultPrevented;
-					},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+					},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 				},this.useCapture);
 			}
 			window.addEventListener("pointerup",function(e) {
+				let onPointerUp1 = onPointerUp;
 				let e1 = e;
-				onPointerUp(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+				let bounds = _gthis.el.getBoundingClientRect();
+				onPointerUp1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 			window.addEventListener("pointercancel",function(e) {
+				let onPointerCancel1 = onPointerCancel;
 				let e1 = e;
-				onPointerCancel(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
+				let bounds = _gthis.el.getBoundingClientRect();
+				onPointerCancel1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1.target == _gthis.el,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x,e1.y,e1.width,e1.height,_gthis.el.clientWidth,_gthis.el.clientHeight,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 		} else {
 			window.addEventListener("mousedown",function(e) {
@@ -276,6 +292,7 @@ class event_ViewEventManager {
 	addWheelEventListeners() {
 		let _gthis = this;
 		window.addEventListener("wheel",function(e) {
+			let bounds = _gthis.el.getBoundingClientRect();
 			let x_px = e.clientX;
 			let y_px = e.clientY;
 			let deltaX_px = e.deltaX;
@@ -298,29 +315,30 @@ class event_ViewEventManager {
 				deltaZ_px = e.deltaZ * 100;
 				break;
 			}
-			let event = new event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px,y_px,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,$bind(e,e.preventDefault),function() {
+			let event = new event_WheelEvent(deltaX_px,deltaY_px,deltaZ_px,x_px - bounds.left,y_px - bounds.top,bounds.width,bounds.height,e.altKey,e.ctrlKey,e.metaKey,e.shiftKey,$bind(e,e.preventDefault),function() {
 				return e.defaultPrevented;
-			},e.timeStamp,e.target == _gthis.el,e);
+			},e.timeStamp,e);
+			let onTargetView = e.target == _gthis.el;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onWheelCallbacks;
-			while(_g < _g1.length) _g1[_g++](event);
+			while(_g < _g1.length) _g1[_g++](event,onTargetView);
 		},{ passive : false, capture : this.useCapture});
 	}
 	addKeyboardEventListeners() {
 		let _gthis = this;
 		window.addEventListener("keydown",function(e) {
-			let hasFocus = e.target == _gthis.el;
+			let onTargetView = e.target == _gthis.el;
 			let event = e;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onKeyDownCallbacks;
-			while(_g < _g1.length) _g1[_g++](event,hasFocus);
+			while(_g < _g1.length) _g1[_g++](event,onTargetView);
 		});
 		window.addEventListener("keyup",function(e) {
-			let hasFocus = e.target == _gthis.el;
+			let onTargetView = e.target == _gthis.el;
 			let event = e;
 			let _g = 0;
 			let _g1 = _gthis.eventHandler.onKeyUpCallbacks;
-			while(_g < _g1.length) _g1[_g++](event,hasFocus);
+			while(_g < _g1.length) _g1[_g++](event,onTargetView);
 		});
 	}
 	addLifeCycleEventListeners() {
@@ -386,8 +404,8 @@ class control_ArcBallControl {
 			viewEventManager.eventHandler.onPointerMoveCallbacks.push($bind(this,this.handlePointerMove));
 			viewEventManager.eventHandler.onPointerUpCallbacks.push($bind(this,this.handlePointerUp));
 			viewEventManager.eventHandler.onPointerCancelCallbacks.push($bind(this,this.handlePointerUp));
-			let cb = function(e) {
-				if(e.onTargetView && _gthis.zoomSpeed > 0) {
+			let cb = function(e,onView) {
+				if(onView && Math.abs(_gthis.zoomSpeed) > 0) {
 					_gthis.radius.target += e.deltaY * _gthis.zoomSpeed / 1000;
 					_gthis.radius.target = Math.max(_gthis.radius.target,0);
 					e.preventDefault();
@@ -397,8 +415,8 @@ class control_ArcBallControl {
 			viewEventManager.eventHandler.onWheelCallbacks.push(cb);
 		}
 	}
-	handlePointerDown(e) {
-		if(e.onTargetView && e.button == 0 && e.isPrimary) {
+	handlePointerDown(e,onTargetView) {
+		if(onTargetView && e.button == 0 && e.isPrimary && Math.abs(this.dragSpeed) > 0) {
 			this._drivingPointerId = e.pointerId;
 			this._onDown_angleAroundY = this.angleAroundY.target;
 			this._onDown_angleAroundXZ = this.angleAroundXZ.target;
@@ -408,24 +426,27 @@ class control_ArcBallControl {
 			e.nativeEvent.stopPropagation();
 		}
 	}
-	handlePointerMove(e) {
+	handlePointerMove(e,_) {
 		if(e.pointerId == this._drivingPointerId) {
-			let surfaceSize_x = e.viewWidth;
-			let surfaceSize_y = e.viewHeight;
+			let x = e.viewWidth;
+			let y = e.viewHeight;
 			let a = this._onDown_clientXY;
-			this.angleAroundXZ.target = this._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * this.dragSpeed;
+			this.angleAroundXZ.target = this._onDown_angleAroundXZ + (e.y / y - a.y / y) * this.dragSpeed;
 			let this1 = this.orientation;
-			let u_x = this1.x;
-			let u_y = this1.y;
-			let u_z = this1.z;
+			let v_x = 0;
+			let v_y = 1;
+			let v_z = 0;
+			let x1 = this1.x;
+			let y1 = this1.y;
+			let z = this1.z;
 			let s = this1.w;
-			let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
-			this.angleAroundY.target = this._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * this.dragSpeed * (e.viewWidth / e.viewHeight);
+			let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
+			this.angleAroundY.target = this._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * this.dragSpeed * (e.viewWidth / e.viewHeight);
 			e.preventDefault();
 			e.nativeEvent.stopPropagation();
 		}
 	}
-	handlePointerUp(e) {
+	handlePointerUp(e,_) {
 		if(e.pointerId == this._drivingPointerId) {
 			this._drivingPointerId = null;
 			e.preventDefault();
@@ -501,7 +522,52 @@ class ui_DevUI extends ui_ExposedGUI {
 		window.document.head.appendChild(styleEl);
 	}
 	addFolder(name) {
-		return super.addFolder(name);
+		return ui_DevUI.patchFolder(super.addFolder(name));
+	}
+	static patchController(g,getAssignSyntax) {
+		let e = g.domElement.closest("li");
+		e.addEventListener("click",function(e) {
+			if(e.getModifierState("Alt")) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+			}
+		},true);
+		g.getAssignSyntax = getAssignSyntax;
+		return g;
+	}
+	static patchFolder(g) {
+		let e = g.domElement.closest("li");
+		e.addEventListener("click",function(e) {
+			if(e.getModifierState("Alt")) {
+				let _g = [];
+				let _g1 = 0;
+				let _g2 = g.__controllers;
+				while(_g1 < _g2.length) {
+					let controller = _g2[_g1];
+					++_g1;
+					if(controller.getAssignSyntax != null) {
+						_g.push(controller.getAssignSyntax());
+					} else {
+						_g.push("// missing .getAssignSyntax() for " + controller.property);
+					}
+				}
+				let lines = _g;
+				let _g3 = [];
+				let _g11 = 0;
+				let _g4 = lines;
+				while(_g11 < _g4.length) {
+					let v = _g4[_g11];
+					++_g11;
+					if(v != null) {
+						_g3.push(v);
+					}
+				}
+				$global.console.log("// " + g.name + "\n" + lines.join("\n"));
+				e.preventDefault();
+				e.stopImmediatePropagation();
+			}
+		},true);
+		return g;
 	}
 }
 ui_DevUI.__name__ = true;
@@ -771,6 +837,9 @@ function Main_main() {
 	let c = floorUI.add(o,"reflectorResolution").name("reflectorResolution");
 	c = c.min(0);
 	c = c.max(1);
+	ui_DevUI.patchController(c,function() {
+		return "floor.reflectorResolution" + " = " + floor.reflectorResolution + ";";
+	}).name("reflectorResolution");
 	let o1 = { };
 	Object.defineProperty(o1,"reflectorKernel",{ set : function(__value) {
 		floor.reflectorKernel = __value;
@@ -780,6 +849,9 @@ function Main_main() {
 	let c1 = floorUI.add(o1,"reflectorKernel").name("reflectorKernel");
 	c1 = c1.min(0);
 	c1 = c1.max(0.1);
+	ui_DevUI.patchController(c1,function() {
+		return "floor.reflectorKernel" + " = " + floor.reflectorKernel + ";";
+	}).name("reflectorKernel");
 	Main_arcBallControl.target.y = 1.;
 	Main_animationFrame(window.performance.now());
 }
@@ -795,15 +867,15 @@ function Main_animationFrame(time_ms) {
 	Main_uTime_s.value = time_s;
 	let gl = Main_renderer.getContext();
 	let x = window.innerWidth;
-	let a_y = window.innerHeight;
+	let y = window.innerHeight;
 	let b = Main_pixelRatio;
-	let targetSize_x = Math.floor(x * b);
-	let targetSize_y = Math.floor(a_y * b);
-	if(!(targetSize_x == gl.drawingBufferWidth && targetSize_y == gl.drawingBufferHeight)) {
-		Main_canvas.width = Math.floor(targetSize_x);
-		Main_canvas.height = Math.floor(targetSize_y);
+	let x1 = Math.floor(x * b);
+	let y1 = Math.floor(y * b);
+	if(!(x1 == gl.drawingBufferWidth && y1 == gl.drawingBufferHeight)) {
+		Main_canvas.width = Math.floor(x1);
+		Main_canvas.height = Math.floor(y1);
 	}
-	let newAspect = targetSize_x / targetSize_y;
+	let newAspect = x1 / y1;
 	if(Main_camera.aspect != newAspect) {
 		Main_camera.aspect = newAspect;
 		Main_camera.updateProjectionMatrix();
@@ -831,31 +903,31 @@ function Main_update(time_s,dt_s) {
 	let denominator = lenSq == 0.0 ? 1.0 : Math.sqrt(lenSq);
 	let angle = _this.axialRotation.value;
 	let sa = Math.sin(angle * 0.5);
-	let axial_x = v.x / denominator * sa;
-	let axial_y = v.y / denominator * sa;
-	let axial_z = v.z / denominator * sa;
-	let axial_w = Math.cos(angle * 0.5);
+	let x = v.x / denominator * sa;
+	let y = v.y / denominator * sa;
+	let z = v.z / denominator * sa;
+	let w = Math.cos(angle * 0.5);
 	let angle1 = _this.angleAroundY.value;
 	let sa1 = Math.sin(angle1 * 0.5);
-	let aY_x = 0. * sa1;
-	let aY_y = sa1;
-	let aY_z = 0. * sa1;
-	let aY_w = Math.cos(angle1 * 0.5);
+	let x1 = 0 * sa1;
+	let y1 = 1 * sa1;
+	let z1 = 0 * sa1;
+	let w1 = Math.cos(angle1 * 0.5);
 	let angle2 = -_this.angleAroundXZ.value;
 	let sa2 = Math.sin(angle2 * 0.5);
-	let aXZ_x = sa2;
-	let aXZ_y = 0. * sa2;
-	let aXZ_z = 0. * sa2;
-	let aXZ_w = Math.cos(angle2 * 0.5);
-	let this2 = _this.orientation;
-	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
-	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
-	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
-	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
-	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
-	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
-	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
-	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
+	let x2 = 1 * sa2;
+	let y2 = 0 * sa2;
+	let z2 = 0 * sa2;
+	let w2 = Math.cos(angle2 * 0.5);
+	let this11 = _this.orientation;
+	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
+	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
+	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
+	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
+	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
+	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
+	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
+	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
 	let a = _this.position;
 	let b = _this.target;
 	let q = _this.orientation;
@@ -881,7 +953,9 @@ function Main_initDevUI() {
 	let c = g.add(o,"pixelRatio").name("pixelRatio");
 	c = c.min(0.1);
 	c = c.max(4);
-	c.name("resolution");
+	ui_DevUI.patchController(c,function() {
+		return "pixelRatio" + " = " + Main_pixelRatio + ";";
+	}).name("pixelRatio").name("resolution");
 	let o1 = { };
 	Object.defineProperty(o1,"fov",{ set : function(__value) {
 		Main_camera.fov = __value;
@@ -891,7 +965,9 @@ function Main_initDevUI() {
 	let c1 = g.add(o1,"fov").name("fov");
 	c1 = c1.min(1);
 	c1 = c1.max(200);
-	c1.onChange(function(_) {
+	ui_DevUI.patchController(c1,function() {
+		return "camera.fov" + " = " + Main_camera.fov + ";";
+	}).name("fov").onChange(function(_) {
 		Main_camera.updateProjectionMatrix();
 	});
 	let renderer = Main_renderer;
@@ -918,7 +994,9 @@ function Main_initDevUI() {
 	}, get : function() {
 		return renderer.toneMapping;
 	}});
-	g.add(o2,"toneMapping",obj).name("toneMapping").onChange(function(v) {
+	ui_DevUI.patchController(g.add(o2,"toneMapping",obj).name("toneMapping"),function() {
+		return "renderer.toneMapping = " + names[values.indexOf(renderer.toneMapping)] + ";";
+	}).onChange(function(v) {
 		let outputEncoding = renderer.outputEncoding;
 		renderer.outputEncoding = outputEncoding != three_TextureEncoding.LinearEncoding ? three_TextureEncoding.LinearEncoding : three_TextureEncoding.GammaEncoding;
 		return window.requestAnimationFrame(function(t) {
@@ -948,7 +1026,9 @@ function Main_initDevUI() {
 	}, get : function() {
 		return renderer.outputEncoding;
 	}});
-	g.add(o3,"outputEncoding",obj1).name("outputEncoding");
+	ui_DevUI.patchController(g.add(o3,"outputEncoding",obj1).name("outputEncoding"),function() {
+		return "renderer.outputEncoding = " + names1[values1.indexOf(renderer.outputEncoding)] + ";";
+	});
 	let o4 = { };
 	Object.defineProperty(o4,"toneMappingExposure",{ set : function(__value) {
 		renderer.toneMappingExposure = __value;
@@ -958,29 +1038,35 @@ function Main_initDevUI() {
 	let c2 = g.add(o4,"toneMappingExposure").name("toneMappingExposure");
 	c2 = c2.min(0);
 	c2 = c2.max(4);
+	ui_DevUI.patchController(c2,function() {
+		return "renderer.toneMappingExposure" + " = " + renderer.toneMappingExposure + ";";
+	}).name("toneMappingExposure");
 	let o5 = { };
 	Object.defineProperty(o5,"enabled",{ set : function(__value) {
 		renderer.shadowMap.enabled = __value;
 	}, get : function() {
 		return renderer.shadowMap.enabled;
 	}});
-	g.add(o5,"enabled").name("enabled").name("Shadows");
+	ui_DevUI.patchController(g.add(o5,"enabled").name("enabled"),function() {
+		return "renderer.shadowMap.enabled" + " = " + Std.string(renderer.shadowMap.enabled) + ";";
+	}).name("enabled").name("Shadows");
 	let options = ["assets/env/hilly_terrain_01_1k.rgbd.png","assets/env/snowy_park_01_1k.rgbd.png","assets/env/birchwood_2k.rgbd.png","assets/env/winter_lake_01_1k.rgbd.png","assets/env/snowy_forest_path_01_1k.rgbd.png","assets/env/night_bridge_2k.rgbd.png","assets/env/kiara_1_dawn_2k.rgbd.png","assets/env/venice_sunset_2k.rgbd.png","assets/env/blouberg_sunrise_1_2k.rgbd.png","assets/env/the_sky_is_on_fire_2k.rgbd.png"];
 	let _this = options;
 	let result = new Array(_this.length);
 	let _g4 = 0;
-	let _g5 = _this.length;
-	while(_g4 < _g5) {
+	let _g11 = _this.length;
+	while(_g4 < _g11) {
 		let i = _g4++;
 		result[i] = Std.string(_this[i]);
 	}
+	let names2 = result;
 	let values2 = options;
 	let obj2 = { };
-	let _g6 = 0;
-	let _g7 = result.length;
-	while(_g6 < _g7) {
-		let i = _g6++;
-		obj2[result[i]] = values2[i];
+	let _g5 = 0;
+	let _g6 = names2.length;
+	while(_g5 < _g6) {
+		let i = _g5++;
+		obj2[names2[i]] = values2[i];
 	}
 	let o6 = { };
 	Object.defineProperty(o6,"environmentPath",{ set : function(__strValue) {
@@ -996,7 +1082,9 @@ function Main_initDevUI() {
 	}, get : function() {
 		return Main_environmentManager.get_environmentPath();
 	}});
-	g.add(o6,"environmentPath",obj2).name("environmentPath");
+	ui_DevUI.patchController(g.add(o6,"environmentPath",obj2).name("environmentPath"),function() {
+		return "environmentManager.environmentPath = " + names2[values2.indexOf(Main_environmentManager.get_environmentPath())] + ";";
+	});
 	let o7 = { };
 	Object.defineProperty(o7,"roughness",{ set : function(__value) {
 		Main_background.material.uRoughness.value = __value;
@@ -1006,10 +1094,14 @@ function Main_initDevUI() {
 	let c3 = g.add(o7,"roughness").name("roughness");
 	c3 = c3.min(0);
 	c3 = c3.max(1);
-	c3.name("Background Blur");
-	g.add({ "fn" : function() {
+	ui_DevUI.patchController(c3,function() {
+		return "background.roughness" + " = " + Main_background.material.uRoughness.value + ";";
+	}).name("roughness").name("Background Blur");
+	ui_DevUI.patchController(g.add({ "fn" : function() {
 		Main_environmentManager.downloadPmremEnvironmentMap();
-	}},"fn").name("() -> environmentManager.downloadPmremEnvironmentMap()").name("Download Processed HDR");
+	}},"fn").name("() -> environmentManager.downloadPmremEnvironmentMap()"),function() {
+		return "() -> environmentManager.downloadPmremEnvironmentMap()" + ";";
+	}).name("Download Processed HDR");
 	let g1 = gui.addFolder("Controls");
 	let c4 = Main_arcBallControl;
 	let o8 = { };
@@ -1021,6 +1113,9 @@ function Main_initDevUI() {
 	let c5 = g1.add(o8,"dragSpeed").name("dragSpeed");
 	c5 = c5.min(0);
 	c5 = c5.max(15);
+	ui_DevUI.patchController(c5,function() {
+		return "c.dragSpeed" + " = " + c4.dragSpeed + ";";
+	}).name("dragSpeed");
 	let o9 = { };
 	Object.defineProperty(o9,"zoomSpeed",{ set : function(__value) {
 		c4.zoomSpeed = __value;
@@ -1030,6 +1125,9 @@ function Main_initDevUI() {
 	let c6 = g1.add(o9,"zoomSpeed").name("zoomSpeed");
 	c6 = c6.min(0);
 	c6 = c6.max(20);
+	ui_DevUI.patchController(c6,function() {
+		return "c.zoomSpeed" + " = " + c4.zoomSpeed + ";";
+	}).name("zoomSpeed");
 	let o10 = { };
 	Object.defineProperty(o10,"strength",{ set : function(__value) {
 		let v = __value;
@@ -1042,6 +1140,9 @@ function Main_initDevUI() {
 	let c7 = g1.add(o10,"strength").name("strength");
 	c7 = c7.min(0);
 	c7 = c7.max(1000);
+	ui_DevUI.patchController(c7,function() {
+		return "c.strength" + " = " + c4.angleAroundY.strength + ";";
+	}).name("strength");
 	let o11 = { };
 	Object.defineProperty(o11,"damping",{ set : function(__value) {
 		let v = __value;
@@ -1054,6 +1155,9 @@ function Main_initDevUI() {
 	let c8 = g1.add(o11,"damping").name("damping");
 	c8 = c8.min(0);
 	c8 = c8.max(200);
+	ui_DevUI.patchController(c8,function() {
+		return "c.damping" + " = " + c4.angleAroundY.damping + ";";
+	}).name("damping");
 	return gui;
 }
 class Reflect {
@@ -1238,24 +1342,25 @@ class event_PointerState {
 }
 event_PointerState.__name__ = true;
 class event_PointerEvent extends event_PointerState {
-	constructor(button,preventDefault,defaultPrevented,timeStamp,onTargetView,nativeEvent,pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
+	constructor(button,preventDefault,defaultPrevented,timeStamp,nativeEvent,pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist) {
 		super(pointerId,pointerType,isPrimary,buttons,x,y,width,height,viewWidth,viewHeight,pressure,tangentialPressure,tiltX,tiltY,twist);
 		this.button = button;
 		this.preventDefault = preventDefault;
 		this.defaultPrevented = defaultPrevented;
 		this.timeStamp = timeStamp;
-		this.onTargetView = onTargetView;
 		this.nativeEvent = nativeEvent;
 	}
 }
 event_PointerEvent.__name__ = true;
 class event_WheelEvent {
-	constructor(deltaX,deltaY,deltaZ,x,y,altKey,ctrlKey,metaKey,shiftKey,preventDefault,defaultPrevented,timeStamp,onTargetView,nativeEvent) {
+	constructor(deltaX,deltaY,deltaZ,x,y,viewWidth,viewHeight,altKey,ctrlKey,metaKey,shiftKey,preventDefault,defaultPrevented,timeStamp,nativeEvent) {
 		this.deltaX = deltaX;
 		this.deltaY = deltaY;
 		this.deltaZ = deltaZ;
 		this.x = x;
 		this.y = y;
+		this.viewWidth = viewWidth;
+		this.viewHeight = viewHeight;
 		this.altKey = altKey;
 		this.ctrlKey = ctrlKey;
 		this.metaKey = metaKey;
@@ -1263,7 +1368,6 @@ class event_WheelEvent {
 		this.preventDefault = preventDefault;
 		this.defaultPrevented = defaultPrevented;
 		this.timeStamp = timeStamp;
-		this.onTargetView = onTargetView;
 		this.nativeEvent = nativeEvent;
 	}
 }
@@ -1829,28 +1933,28 @@ var Main_pixelRatio = Math.min(window.devicePixelRatio,2);
 var Main_camera = new three_PerspectiveCamera(70,1,0.01,100);
 var Main_canvas = (function($this) {
 	var $r;
-	let _ = window.document.createElement("canvas");
-	_.style.position = "absolute";
-	_.style.zIndex = "0";
-	_.style.top = "0";
-	_.style.left = "0";
-	_.style.width = "100%";
-	_.style.height = "100%";
-	$r = _;
+	let canvas = window.document.createElement("canvas");
+	canvas.style.position = "absolute";
+	canvas.style.zIndex = "0";
+	canvas.style.top = "0";
+	canvas.style.left = "0";
+	canvas.style.width = "100%";
+	canvas.style.height = "100%";
+	$r = canvas;
 	return $r;
 }(this));
 var Main_renderer = (function($this) {
 	var $r;
-	let _ = new three_WebGLRenderer({ canvas : Main_canvas, antialias : true, powerPreference : "high-performance"});
-	_.autoClear = false;
-	_.autoClearColor = false;
-	_.autoClearDepth = false;
-	_.shadowMap.enabled = false;
-	_.outputEncoding = three_TextureEncoding.sRGBEncoding;
-	_.toneMapping = three_ToneMapping.ACESFilmicToneMapping;
-	_.toneMappingExposure = 1.0;
-	_.physicallyCorrectLights = true;
-	$r = _;
+	let renderer = new three_WebGLRenderer({ canvas : Main_canvas, antialias : true, powerPreference : "high-performance"});
+	renderer.autoClear = false;
+	renderer.autoClearColor = false;
+	renderer.autoClearDepth = false;
+	renderer.outputEncoding = three_TextureEncoding.sRGBEncoding;
+	renderer.toneMapping = three_ToneMapping.ACESFilmicToneMapping;
+	renderer.toneMappingExposure = 1.0;
+	renderer.physicallyCorrectLights = true;
+	renderer.shadowMap.enabled = false;
+	$r = renderer;
 	return $r;
 }(this));
 var Main_scene = new three_Scene();
