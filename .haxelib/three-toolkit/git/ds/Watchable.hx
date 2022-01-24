@@ -1,6 +1,6 @@
 package ds;
 
-@:generic class Watchable<T> {
+class Watchable<T> {
 
 	@:isVar public var value(get, set): T;
 	final callbacks = new Array<(v:T) -> Void>();

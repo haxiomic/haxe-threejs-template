@@ -97,8 +97,8 @@ class ArcBallControl {
 			viewEventManager.onPointerMove(handlePointerMove);
 			viewEventManager.onPointerUp(handlePointerUp);
 			viewEventManager.onPointerCancel(handlePointerUp);
-			viewEventManager.onWheel((e) -> {
-				if (e.onTargetView && zoomSpeed > 0) {
+			viewEventManager.onWheel((e, onView) -> {
+				if (onView && Math.abs(zoomSpeed) > 0) {
 					radius.target += e.deltaY * zoomSpeed / 1000;
 					radius.target = Math.max(radius.target, 0);
 					e.preventDefault();
@@ -153,8 +153,10 @@ class ArcBallControl {
 	var _onDown_angleAroundXZ: Float = 0;
 	var _onDown_clientXY = new Vec2(0, 0);
 	var _drivingPointerId: Null<Int> = null;
-	public inline function handlePointerDown(e: PointerEvent) {
-		if (e.onTargetView && e.button == Primary && e.isPrimary) {
+	public inline function handlePointerDown(e: PointerEvent, onTargetView: Bool) {
+		if (
+			onTargetView && e.button == Primary && e.isPrimary && Math.abs(dragSpeed) > 0
+		) {
 			_drivingPointerId = e.pointerId;
 			_onDown_angleAroundY = angleAroundY.target;
 			_onDown_angleAroundXZ = angleAroundXZ.target;
@@ -165,7 +167,7 @@ class ArcBallControl {
 		}
 	}
 
-	public inline function handlePointerMove(e: PointerEvent) {
+	public inline function handlePointerMove(e: PointerEvent, _) {
 		if (e.pointerId == _drivingPointerId) {
 			// normalize coordinates so dragSpeed is independent of screen size
 			var surfaceSize = new Vec2(e.viewWidth, e.viewHeight);
@@ -190,7 +192,7 @@ class ArcBallControl {
 		}
 	}
 
-	public inline function handlePointerUp(e: PointerEvent) {
+	public inline function handlePointerUp(e: PointerEvent, _) {
 		if (e.pointerId == _drivingPointerId) {
 			_drivingPointerId = null;
 			

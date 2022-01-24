@@ -16,7 +16,7 @@ import js.html.WheelEvent;
 	Generally input events follow the latest browser input event specifications, however there are small differences
 	- For mouse, touch and pen input, an interface that closely follows the PointerEvent API is used
 	- Wheel events mirror browser [WheelEvent](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent) where all deltas are in units of **points**, normalizing for `deltaMode`
-	- KeyboardEvents mirror browser [KeyboardEvent](https://w3c.github.io/uievents/#idl-keyboardevent) with an extra parameter `hasFocus` to detect if the view is focused for the event
+	- KeyboardEvents mirror browser [KeyboardEvent](https://w3c.github.io/uievents/#idl-keyboardevent) with an extra parameter `onTargetView` to detect if the view is focused for the event
 **/
 @:nullSafety
 class ViewEventManager {
@@ -66,7 +66,7 @@ class ViewEventManager {
 		Return true to prevent default behavior.
 		See https://www.w3.org/TR/pointerevents/#the-pointerdown-event
 	**/
-	public inline function onPointerDown(cb: PointerEvent -> Void) {
+	public inline function onPointerDown(cb: (PointerEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onPointerDownCallbacks.push(cb);
 		return { remove: () -> eventHandler.onPointerDownCallbacks.remove(cb) }
 	}
@@ -77,7 +77,7 @@ class ViewEventManager {
 		Return true to prevent default behavior.
 		See https://www.w3.org/TR/pointerevents/#the-pointermove-event
 	**/
-	public inline function onPointerMove(cb: PointerEvent -> Void) {
+	public inline function onPointerMove(cb: (PointerEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onPointerMoveCallbacks.push(cb);
 		return { remove: () -> eventHandler.onPointerMoveCallbacks.remove(cb) }
 	}
@@ -87,7 +87,7 @@ class ViewEventManager {
 		Return true to prevent default behavior.
 		See https://www.w3.org/TR/pointerevents/#the-pointerup-event
 	**/
-	public inline function onPointerUp(cb: PointerEvent -> Void) {
+	public inline function onPointerUp(cb: (PointerEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onPointerUpCallbacks.push(cb);
 		return { remove: () -> eventHandler.onPointerUpCallbacks.remove(cb) }
 	}
@@ -97,7 +97,7 @@ class ViewEventManager {
 		Return true to prevent default behavior.
 		See https://www.w3.org/TR/pointerevents/#the-pointercancel-event
 	**/
-	public inline function onPointerCancel(cb: PointerEvent -> Void) {
+	public inline function onPointerCancel(cb: (PointerEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onPointerCancelCallbacks.push(cb);
 		return { remove: () -> eventHandler.onPointerCancelCallbacks.remove(cb) }
 	}
@@ -107,7 +107,7 @@ class ViewEventManager {
 		Return true to prevent default behavior.
 		If `ctrlKey` is true, the event can be assumed to be a pinch gesture on a trackpad.
 	**/
-	public inline function onWheel(cb: event.WheelEvent -> Void) {
+	public inline function onWheel(cb: (event.WheelEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onWheelCallbacks.push(cb);
 		return { remove: () -> eventHandler.onWheelCallbacks.remove(cb) }
 	}
@@ -115,9 +115,9 @@ class ViewEventManager {
 	/**
 		Callback is triggered when a key is pressed down with the view focused.
 		Return true to prevent default behavior.
-		`hasFocus` is true if our view has input focus for the event. For `hasFocus` to be correct the canvas needs to be focusable. This requires setting the `tabIndex` attribute on the canvas
+		`onTargetView` is true if our view has input focus for the event. For `onTargetView` to be correct the canvas needs to be focusable. This requires setting the `tabIndex` attribute on the canvas
 	**/
-	public inline function onKeyDown(cb: (event.KeyboardEvent, hasFocus: Bool) -> Void) {
+	public inline function onKeyDown(cb: (event.KeyboardEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onKeyDownCallbacks.push(cb);
 		return { remove: () -> eventHandler.onKeyDownCallbacks.remove(cb) }
 	}
@@ -125,9 +125,9 @@ class ViewEventManager {
 	/**
 		Callback is triggered when a key is released with the view focused.
 		Return true to prevent default behavior.
-		`hasFocus` is true if our view has input focus for the event. For `hasFocus` to be correct the canvas needs to be focusable. This requires setting the `tabIndex` attribute on the canvas
+		`onTargetView` is true if our view has input focus for the event. For `onTargetView` to be correct the canvas needs to be focusable. This requires setting the `tabIndex` attribute on the canvas
 	**/
-	public inline function onKeyUp(cb: (event.KeyboardEvent, hasFocus: Bool) -> Void) {
+	public inline function onKeyUp(cb: (event.KeyboardEvent, onTargetView: Bool) -> Void) {
 		eventHandler.onKeyUpCallbacks.push(cb);
 		return { remove: () -> eventHandler.onKeyUpCallbacks.remove(cb) }
 	}
@@ -184,18 +184,20 @@ class ViewEventManager {
 			// convert force to a 0 - 1 range
 			var pressure = Math.max((force - 1), 0);
 
+			var bounds = el.getBoundingClientRect();
+
 			pointerMethod({
 				pointerId: 1,
 				pointerType: 'mouse',
 				isPrimary: true,
 				button: mouseEvent.button,
 				buttons: mouseEvent.buttons,
-				x: mouseEvent.clientX,
-				y: mouseEvent.clientY,
+				x: mouseEvent.clientX - bounds.left,
+				y: mouseEvent.clientY - bounds.top,
 				width: 1,
 				height: 1,
-				viewWidth: el.clientWidth,
-				viewHeight: el.clientHeight,
+				viewWidth: bounds.width,
+				viewHeight: bounds.height,
 				pressure: pressure,
 				tangentialPressure: 0,
 				tiltX: 0,
@@ -205,7 +207,6 @@ class ViewEventManager {
 				defaultPrevented: () -> mouseEvent.defaultPrevented,
 				timeStamp: mouseEvent.timeStamp,
 				nativeEvent: mouseEvent,
-				onTargetView: mouseEvent.target == el,
 			});
 		}
 
@@ -222,7 +223,7 @@ class ViewEventManager {
 			return touchInfo;
 		}
 
-		function executePointerMethodFromTouchEvent(touchEvent: TouchEvent, pointerMethod: (event.PointerEvent) -> Void) {
+		function executePointerMethodFromTouchEvent(touchEvent: TouchEvent, pointerMethod: (PointerEvent) -> Void) {
 			var buttonStates: {
 				button: Int,
 				buttons: Int,
@@ -282,18 +283,20 @@ class ViewEventManager {
 				var radiusX = touch.radiusX != null ? touch.radiusX : (js.Syntax.field(touch, 'webkitRadiusX') != null ? js.Syntax.field(touch, 'webkitRadiusX') : 5);
 				var radiusY = touch.radiusY != null ? touch.radiusY : (js.Syntax.field(touch, 'webkitRadiusY') != null ? js.Syntax.field(touch, 'webkitRadiusY') : 5);
 
+				var bounds = el.getBoundingClientRect();
+
 				pointerMethod({
 					pointerId: touch.identifier,
 					pointerType: (touch.touchType == 'stylus') ? 'pen' : 'touch',
 					isPrimary: touch.identifier == touchInfo.primaryTouchIdentifier,
 					button: buttonStates.button,
 					buttons: buttonStates.buttons,
-					x: touch.clientX,
-					y: touch.clientY,
+					x: touch.clientX - bounds.left,
+					y: touch.clientY - bounds.top,
 					width: radiusX * 2,
 					height: radiusY * 2,
-					viewWidth: el.clientWidth,
-					viewHeight: el.clientHeight,
+					viewWidth: bounds.width,
+					viewHeight: bounds.height,
 					pressure: touch.force,
 					tangentialPressure: 0,
 					tiltX: Math.isFinite(tiltX) ? tiltX : 0,
@@ -303,7 +306,6 @@ class ViewEventManager {
 					defaultPrevented: () -> touchEvent.defaultPrevented,
 					timeStamp: touchEvent.timeStamp,
 					nativeEvent: touchEvent,
-					onTargetView: touchEvent.target == el,
 				});
 			}
 		}
@@ -317,8 +319,8 @@ class ViewEventManager {
 				// add new state
 				activePointers.set(e.pointerId, {
 					buttons: e.buttons,
-					y: e.y,
 					x: e.x,
+					y: e.y,
 					width: e.width,
 					viewWidth: e.viewWidth,
 					viewHeight: e.viewHeight,
@@ -345,12 +347,12 @@ class ViewEventManager {
 		var onPointerDown = (e: PointerEvent) -> {
 			updatePointerState(e);
 
-			eventHandler.onPointerDown(e);
+			eventHandler.onPointerDown(e, e.nativeEvent.target == el);
 		};
 		var onPointerMove = (e: PointerEvent) -> {
 			updatePointerState(e);
 
-			eventHandler.onPointerMove(e);
+			eventHandler.onPointerMove(e, e.nativeEvent.target == el);
 		};
 		var onPointerUp = (e: PointerEvent) -> {
 			switch e.pointerType {
@@ -360,7 +362,7 @@ class ViewEventManager {
 					removePointerState(e);
 			}
 
-			eventHandler.onPointerUp(e);
+			eventHandler.onPointerUp(e, e.nativeEvent.target == el);
 		};
 		var onPointerCancel = (e: PointerEvent) -> {
 			switch e.pointerType {
@@ -370,33 +372,33 @@ class ViewEventManager {
 					removePointerState(e);
 			}
 
-			eventHandler.onPointerCancel(e);
+			eventHandler.onPointerCancel(e, e.nativeEvent.target == el);
 		};
 
 		// use PointerEvent API if supported
 		if (js.Syntax.field(window, 'PointerEvent')) {
 			inline function convertPointerEvent(e: js.html.PointerEvent): PointerEvent {
+				var bounds = el.getBoundingClientRect();
 				return {
-					button: e.button,
-					buttons: e.buttons,
-					height: e.height,
 					isPrimary: e.isPrimary,
 					pointerId: e.pointerId,
 					pointerType: e.pointerType,
+					button: e.button,
+					buttons: e.buttons,
+					width: e.width,
+					height: e.height,
+					x: e.x - bounds.left,
+					y: e.y - bounds.top,
 					pressure: e.pressure,
 					tangentialPressure: e.tangentialPressure,
 					tiltX: e.tiltX,
 					tiltY: e.tiltY,
 					timeStamp: e.timeStamp,
 					twist: e.twist,
-					viewHeight: el.clientHeight,
-					viewWidth: el.clientWidth,
-					width: e.width,
-					x: e.x,
-					y: e.y,
+					viewHeight: bounds.width,
+					viewWidth: bounds.height,
 					defaultPrevented: () -> e.defaultPrevented,
 					preventDefault: e.preventDefault,
-					onTargetView: e.target == el,
 					nativeEvent: e,
 				}
 			}
@@ -431,6 +433,7 @@ class ViewEventManager {
 
 	function addWheelEventListeners() {
 		window.addEventListener('wheel', (e: js.html.WheelEvent) -> {
+			var bounds = el.getBoundingClientRect();
 			// we normalize for delta modes, so we always scroll in px
 			// chrome always uses pixels but firefox can sometime uses lines and pages
 			// see https://stackoverflow.com/questions/20110224/what-is-the-height-of-a-line-in-a-wheel-event-deltamode-dom-delta-line
@@ -456,8 +459,10 @@ class ViewEventManager {
 					deltaZ_px = e.deltaZ * 100;
 			}
 			eventHandler.onWheel({
-				x: x_px,
-				y: y_px,
+				x: x_px - bounds.left,
+				y: y_px - bounds.top,
+				viewWidth: bounds.width,
+				viewHeight: bounds.height,
 				deltaX: deltaX_px,
 				deltaY: deltaY_px,
 				deltaZ: deltaZ_px,
@@ -469,24 +474,23 @@ class ViewEventManager {
 
 				preventDefault: e.preventDefault,
 				defaultPrevented: () -> e.defaultPrevented,
-
-				onTargetView: e.target == el,
+			
 				timeStamp: e.timeStamp,
 
 				nativeEvent: e,
-			});
+			}, e.target == el);
 		}, { passive: false, capture: useCapture });
 	}
 
 	function addKeyboardEventListeners() {
 		// keyboard event
 		window.addEventListener('keydown', (e: KeyboardEvent) -> {
-			var hasFocus = e.target == el;
-			eventHandler.onKeyDown(cast e, hasFocus);
+			var onTargetView = e.target == el;
+			eventHandler.onKeyDown(cast e, onTargetView);
 		});
 		window.addEventListener('keyup', (e) -> {
-			var hasFocus = e.target == el;
-			eventHandler.onKeyUp(cast e, hasFocus);
+			var onTargetView = e.target == el;
+			eventHandler.onKeyUp(cast e, onTargetView);
 		});
 	}
 
@@ -508,57 +512,57 @@ extern class TouchLevel2 extends js.html.Touch {
 
 private class EventDispatcher {
 
-	public final onPointerDownCallbacks = new Array<PointerEvent -> Void>();
-	public final onPointerMoveCallbacks = new Array<PointerEvent -> Void>();
-	public final onPointerUpCallbacks = new Array<PointerEvent -> Void>();
-	public final onPointerCancelCallbacks = new Array<PointerEvent -> Void>();
-	public final onWheelCallbacks = new Array<(event.WheelEvent) -> Void>();
-	public final onKeyDownCallbacks = new Array<(event: event.KeyboardEvent, hasFocus: Bool) -> Void>();
-	public final onKeyUpCallbacks = new Array<(event: event.KeyboardEvent, hasFocus: Bool) -> Void>();
+	public final onPointerDownCallbacks = new Array<(PointerEvent, Bool) -> Void>();
+	public final onPointerMoveCallbacks = new Array<(PointerEvent, Bool) -> Void>();
+	public final onPointerUpCallbacks = new Array<(PointerEvent, Bool) -> Void>();
+	public final onPointerCancelCallbacks = new Array<(PointerEvent, Bool) -> Void>();
+	public final onWheelCallbacks = new Array<(event.WheelEvent, Bool) -> Void>();
+	public final onKeyDownCallbacks = new Array<(event: event.KeyboardEvent, Bool) -> Void>();
+	public final onKeyUpCallbacks = new Array<(event: event.KeyboardEvent, Bool) -> Void>();
 	public final onActivateCallbacks = new Array<() -> Void>();
 	public final onDeactivateCallbacks = new Array<() -> Void>();
 
 	public inline function new() {}
 
-	public inline function onPointerDown(event: PointerEvent): Void {
+	public inline function onPointerDown(event: PointerEvent, onTargetView: Bool): Void {
 		for (cb in onPointerDownCallbacks) {
-			cb(event);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onPointerMove(event: PointerEvent): Void {
+	public inline function onPointerMove(event: PointerEvent, onTargetView: Bool): Void {
 		for (cb in onPointerMoveCallbacks) {
-			cb(event);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onPointerUp(event: PointerEvent): Void {
+	public inline function onPointerUp(event: PointerEvent, onTargetView: Bool): Void {
 		for (cb in onPointerUpCallbacks) {
-			cb(event);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onPointerCancel(event: PointerEvent): Void {
+	public inline function onPointerCancel(event: PointerEvent, onTargetView: Bool): Void {
 		for (cb in onPointerCancelCallbacks) {
-			cb(event);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onWheel(event: event.WheelEvent): Void {
+	public inline function onWheel(event: event.WheelEvent, onTargetView: Bool): Void {
 		for (cb in onWheelCallbacks) {
-			cb(event);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onKeyDown(event: event.KeyboardEvent, hasFocus: Bool): Void {
+	public inline function onKeyDown(event: event.KeyboardEvent, onTargetView: Bool): Void {
 		for (cb in onKeyDownCallbacks) {
-			cb(event, hasFocus);
+			cb(event, onTargetView);
 		}
 	}
 
-	public inline function onKeyUp(event: event.KeyboardEvent, hasFocus: Bool): Void {
+	public inline function onKeyUp(event: event.KeyboardEvent, onTargetView: Bool): Void {
 		for (cb in onKeyUpCallbacks) {
-			cb(event, hasFocus);
+			cb(event, onTargetView);
 		}
 	}
 

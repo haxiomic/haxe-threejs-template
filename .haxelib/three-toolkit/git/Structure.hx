@@ -1,5 +1,6 @@
 #if macro
 import haxe.macro.Type.ClassType;
+import haxe.macro.Type.ClassField;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 #end
@@ -89,22 +90,9 @@ function extendAny<T>(base: T, extendWidth: Any): T {
  * @param options pass {excludes: [fields]} to exclude specific fields
  */
 macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String>}) {
-	var fieldNames = switch Context.followWithAbstracts(Context.typeof(from)) {
-		case TAnonymous(_.get() => anon):
-			anon.fields.map(f -> f.name);
-		case TInst(_.get() => classType, _):
-			// filter accessible class variables and dynamic functions
-			getAllClassFields(classType)
-			.filter(f -> f.isPublic && switch f.kind {
-				case FMethod(MethDynamic): true;
-				case FVar(AccNormal | AccCall, _): true;
-				case FMethod(MethNormal | MethInline | MethMacro): false;
-				case FVar(_, _): false;
-			})
-			.map(f -> f.name);
-		default:
-			Context.fatalError('Can only copy from structures and classes', Context.currentPos());
-	}
+	var fieldNames =
+		getPublicReadableFields(Context.typeof(from), from.pos)
+		.map(f -> f.name);
 	if (options != null) {
 		fieldNames = fieldNames.filter(f -> !options.exclude.contains(f));
 	}
@@ -120,11 +108,63 @@ macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String
 	}
 }
 
-function copyFieldsAny(from: Any, to: Any) {
-	var fieldNames = Reflect.fields(from);
-	for (name in fieldNames) {
-		Reflect.setField(to, name, Reflect.field(from, name));
-	}
+/**
+ * Copies fields from a structure to a target, for example
+ * ```haxe
+ * apply(canvas.style, {
+ * 	position: 'absolute',
+ * 	zIndex: '0',
+ * 	top: '0',
+ * 	left: '0',
+ * 	width: '100%',
+ * 	height: '100%',
+ * });
+ * ```
+ */
+macro function apply(target, objectDeclaration) {
+	var targetFields = getFields(Context.typeof(target), target.pos);
+
+	targetFields = targetFields.filter(f -> f.isPublic && switch f.kind {
+		case FVar(_, _) | FMethod(MethDynamic): true;
+		case FMethod(_): false;
+	});
+
+	var expectedStructure: ComplexType = TAnonymous(targetFields.map(f -> ({
+		name: f.name,
+		meta: [{name: ':optional', pos: f.pos}],
+		doc: f.doc,
+		pos: f.pos,
+		kind: FVar(Context.toComplexType(f.type)),
+	}: Field)));
+
+	// make the compiler type objectDeclaration as expected structure so we get completion
+	getPublicReadableFields(Context.typeof(macro ($objectDeclaration: $expectedStructure)), objectDeclaration.pos);
+
+	var assignmentExprs: Array<Expr> =
+		(switch objectDeclaration.expr {
+			case EObjectDecl(fields): fields;
+			default: Context.error('Expected object declaration', objectDeclaration.pos);
+		})
+		.map(f -> {
+			var name = f.field;
+			var requiresReflection = switch f.quotes {
+				case Unquoted: false;
+				case Quoted: !~/^[a-z]\w*$/i.match(f.field);
+			}
+			if (requiresReflection) {
+				macro Reflect.setField(target, $v{name}, Reflect.getField(objectDeclaration, $v{name}));
+			} else {
+				macro target.$name = objectDeclaration.$name;
+			}
+		}
+	);
+
+	return macro {
+		var objectDeclaration: $expectedStructure = $objectDeclaration;
+		var target = $target;
+		$b{assignmentExprs};
+		target;
+	};
 }
 
 macro function duplicate(structure: Expr) {
@@ -155,7 +195,7 @@ macro function duplicate(structure: Expr) {
 /**
 	Recursively unwraps Null<T> to T
 **/
-private function unwrapNull(complexType: ComplexType) {
+function unwrapNull(complexType: ComplexType) {
 	return switch complexType {
 		case TPath({
 			pack: [],
@@ -169,15 +209,63 @@ private function unwrapNull(complexType: ComplexType) {
 	}
 }
 
+function getFields(type: haxe.macro.Type, pos: Position) {
+	return switch Context.follow(type, false) {
+		case TAnonymous(_.get() => anon):
+			anon.fields;
+		case TInst(_.get() => classType, _):
+			getAllClassFields(classType);
+		case TAbstract(_.get() => abst, _):
+			abst.impl.get().fields.get();
+		case TMono(_) | TDynamic(_):
+			[];
+		case TLazy(f): getFields(f(), pos);
+		case TEnum(_, _) | TFun(_, _) | TType(_, _):
+			Context.error('Type must be a structure, class or abstract', pos);
+	}
+}
+
+function getPublicWritableFields(type: haxe.macro.Type, pos: Position) {
+	return getFields(type, pos)
+		.filter(f -> f.isPublic && isWritableField(f));
+}
+
+function getPublicReadableFields(type: haxe.macro.Type, pos: Position) {
+	return getFields(type, pos)
+		.filter(f -> f.isPublic && isReadableField(f));
+}
+
 /**
  * Concatenates all fields including super types
  * @param classType 
  */
-private function getAllClassFields(classType: ClassType) {
+function getAllClassFields(classType: ClassType) {
 	var fields = if (classType.superClass != null) {
 		getAllClassFields(classType.superClass.t.get());
 	} else [];
 	return fields.concat(classType.fields.get());
+}
+
+function isWritableField(field: ClassField) {
+	return switch field.kind {
+		case 
+			FVar(_, AccNormal | AccCall ) |
+			FMethod(MethDynamic):
+			true;
+		default:
+			false;
+	}
+}
+
+function isReadableField(field: ClassField) {
+	return switch field.kind {
+		case
+			FVar(AccNormal | AccCall | AccInline, _) |
+			FMethod(MethNormal | MethInline | MethDynamic):
+			true;
+		default:
+			false;
+	}
 }
 
 #end

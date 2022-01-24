@@ -18,7 +18,7 @@ class Animator {
 	public function step(dt_s: Float) {
 		t_s += dt_s;
 
-		for (cb in postStepCallbacks) {
+		for (cb in preStepCallbacks) {
 			cb(t_s, dt_s);
 		}
 
@@ -69,27 +69,46 @@ class Animator {
 	 * Add permanent spring that will not be removed when the target is reached
 	 * @param spring 
 	 */
-	public function addSpring(spring: Spring) {
+	public inline function addSpring(spring: Spring) {
 		springs.push(spring);
 		return spring;
 	}
 
-	public function removeSpring(spring: Spring) {
+	public inline function removeSpring(spring: Spring) {
 		springs.remove(spring);
 	}
 
-	public function addPreStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
+	public inline function createSpring(
+		initialValue: Float,
+		?target: Float,
+		?style: animation.Spring.SpringStyle,
+		velocity: Float = 0.0,
+		?onUpdate: (value: Float, velocity: Float) -> Void,
+		?onComplete: () -> Void
+	) {
+		return addSpring(new Spring(initialValue, target, style, velocity, onUpdate, onComplete));
+	}
+
+	public function addBeforeStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
 		if (!preStepCallbacks.has(callback)) {
 			preStepCallbacks.push(callback);
 		}
 		return {remove: () -> preStepCallbacks.remove(callback)};
 	}
 
-	public function addPostStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
+	public function addAfterStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
 		if (!postStepCallbacks.has(callback)) {
 			postStepCallbacks.push(callback);
 		}
 		return {remove: () -> postStepCallbacks.remove(callback)};
+	}
+
+	public function removeBeforeStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
+		return preStepCallbacks.remove(callback);
+	}
+
+	public function removeAfterStepCallback(callback: (t_s: Float, dt_s: Float) -> Void) {
+		return postStepCallbacks.remove(callback);
 	}
 
 }

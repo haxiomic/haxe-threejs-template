@@ -63,11 +63,6 @@ class PointerEvent extends PointerState {
 	final timeStamp: Float;
 
 	/**
-		True if the event occurred while the view was the target (not part of PointerEvent specification)
-	**/
-	final onTargetView: Bool;
-
-	/**
 		Reference to original native event object – type varies between platform
 		Could be PointerEvent, MouseEvent or TouchEvent on js
 	**/
