@@ -218,7 +218,7 @@ class event_ViewEventManager {
 				let bounds = _gthis.el.getBoundingClientRect();
 				onPointerDown1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.width,bounds.height,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 			if(PointerEvent.prototype.getCoalescedEvents != null) {
 				window.addEventListener("pointermove",function(e) {
@@ -230,7 +230,7 @@ class event_ViewEventManager {
 						let bounds = _gthis.el.getBoundingClientRect();
 						onPointerMove1(new event_PointerEvent(e.button,$bind(e,e.preventDefault),function() {
 							return e.defaultPrevented;
-						},e.timeStamp,e,e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x - bounds.left,e.y - bounds.top,e.width,e.height,bounds.height,bounds.width,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist));
+						},e.timeStamp,e,e.pointerId,e.pointerType,e.isPrimary,e.buttons,e.x - bounds.left,e.y - bounds.top,e.width,e.height,bounds.width,bounds.height,e.pressure,e.tangentialPressure,e.tiltX,e.tiltY,e.twist));
 					}
 				},this.useCapture);
 			} else {
@@ -240,7 +240,7 @@ class event_ViewEventManager {
 					let bounds = _gthis.el.getBoundingClientRect();
 					onPointerMove1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 						return e1.defaultPrevented;
-					},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+					},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.width,bounds.height,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 				},this.useCapture);
 			}
 			window.addEventListener("pointerup",function(e) {
@@ -249,7 +249,7 @@ class event_ViewEventManager {
 				let bounds = _gthis.el.getBoundingClientRect();
 				onPointerUp1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.width,bounds.height,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 			window.addEventListener("pointercancel",function(e) {
 				let onPointerCancel1 = onPointerCancel;
@@ -257,7 +257,7 @@ class event_ViewEventManager {
 				let bounds = _gthis.el.getBoundingClientRect();
 				onPointerCancel1(new event_PointerEvent(e1.button,$bind(e1,e1.preventDefault),function() {
 					return e1.defaultPrevented;
-				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.height,bounds.width,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
+				},e1.timeStamp,e1,e1.pointerId,e1.pointerType,e1.isPrimary,e1.buttons,e1.x - bounds.left,e1.y - bounds.top,e1.width,e1.height,bounds.width,bounds.height,e1.pressure,e1.tangentialPressure,e1.tiltX,e1.tiltY,e1.twist));
 			},this.useCapture);
 		} else {
 			window.addEventListener("mousedown",function(e) {
@@ -428,20 +428,17 @@ class control_ArcBallControl {
 	}
 	handlePointerMove(e,_) {
 		if(e.pointerId == this._drivingPointerId) {
-			let x = e.viewWidth;
-			let y = e.viewHeight;
+			let surfaceSize_x = e.viewWidth;
+			let surfaceSize_y = e.viewHeight;
 			let a = this._onDown_clientXY;
-			this.angleAroundXZ.target = this._onDown_angleAroundXZ + (e.y / y - a.y / y) * this.dragSpeed;
+			this.angleAroundXZ.target = this._onDown_angleAroundXZ + (e.y / surfaceSize_y - a.y / surfaceSize_y) * this.dragSpeed;
 			let this1 = this.orientation;
-			let v_x = 0;
-			let v_y = 1;
-			let v_z = 0;
-			let x1 = this1.x;
-			let y1 = this1.y;
-			let z = this1.z;
+			let u_x = this1.x;
+			let u_y = this1.y;
+			let u_z = this1.z;
 			let s = this1.w;
-			let y2 = y1 * (2 * (x1 * v_x + y1 * v_y + z * v_z)) + v_y * (s * s - (x1 * x1 + y1 * y1 + z * z)) + (z * v_x - x1 * v_z) * (2 * s);
-			this.angleAroundY.target = this._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(y2) + 1,-4)) * (y2 >= 0 ? 1 : -1) * (e.x / x - a.x / x) * this.dragSpeed * (e.viewWidth / e.viewHeight);
+			let up_y = u_y * (2 * (u_x * 0. + u_y + u_z * 0.)) + (s * s - (u_x * u_x + u_y * u_y + u_z * u_z)) + (u_z * 0. - u_x * 0.) * (2 * s);
+			this.angleAroundY.target = this._onDown_angleAroundY - (1.0 - Math.pow(Math.abs(up_y) + 1,-4)) * (up_y >= 0 ? 1 : -1) * (e.x / surfaceSize_x - a.x / surfaceSize_x) * this.dragSpeed * (e.viewWidth / e.viewHeight);
 			e.preventDefault();
 			e.nativeEvent.stopPropagation();
 		}
@@ -553,11 +550,11 @@ class ui_DevUI extends ui_ExposedGUI {
 				}
 				let lines = _g;
 				let _g3 = [];
-				let _g11 = 0;
-				let _g4 = lines;
-				while(_g11 < _g4.length) {
-					let v = _g4[_g11];
-					++_g11;
+				let _g4 = 0;
+				let _g5 = lines;
+				while(_g4 < _g5.length) {
+					let v = _g5[_g4];
+					++_g4;
 					if(v != null) {
 						_g3.push(v);
 					}
@@ -867,15 +864,15 @@ function Main_animationFrame(time_ms) {
 	Main_uTime_s.value = time_s;
 	let gl = Main_renderer.getContext();
 	let x = window.innerWidth;
-	let y = window.innerHeight;
+	let a_y = window.innerHeight;
 	let b = Main_pixelRatio;
-	let x1 = Math.floor(x * b);
-	let y1 = Math.floor(y * b);
-	if(!(x1 == gl.drawingBufferWidth && y1 == gl.drawingBufferHeight)) {
-		Main_canvas.width = Math.floor(x1);
-		Main_canvas.height = Math.floor(y1);
+	let targetSize_x = Math.floor(x * b);
+	let targetSize_y = Math.floor(a_y * b);
+	if(!(targetSize_x == gl.drawingBufferWidth && targetSize_y == gl.drawingBufferHeight)) {
+		Main_canvas.width = Math.floor(targetSize_x);
+		Main_canvas.height = Math.floor(targetSize_y);
 	}
-	let newAspect = x1 / y1;
+	let newAspect = targetSize_x / targetSize_y;
 	if(Main_camera.aspect != newAspect) {
 		Main_camera.aspect = newAspect;
 		Main_camera.updateProjectionMatrix();
@@ -903,31 +900,31 @@ function Main_update(time_s,dt_s) {
 	let denominator = lenSq == 0.0 ? 1.0 : Math.sqrt(lenSq);
 	let angle = _this.axialRotation.value;
 	let sa = Math.sin(angle * 0.5);
-	let x = v.x / denominator * sa;
-	let y = v.y / denominator * sa;
-	let z = v.z / denominator * sa;
-	let w = Math.cos(angle * 0.5);
+	let axial_x = v.x / denominator * sa;
+	let axial_y = v.y / denominator * sa;
+	let axial_z = v.z / denominator * sa;
+	let axial_w = Math.cos(angle * 0.5);
 	let angle1 = _this.angleAroundY.value;
 	let sa1 = Math.sin(angle1 * 0.5);
-	let x1 = 0 * sa1;
-	let y1 = 1 * sa1;
-	let z1 = 0 * sa1;
-	let w1 = Math.cos(angle1 * 0.5);
+	let aY_x = 0. * sa1;
+	let aY_y = sa1;
+	let aY_z = 0. * sa1;
+	let aY_w = Math.cos(angle1 * 0.5);
 	let angle2 = -_this.angleAroundXZ.value;
 	let sa2 = Math.sin(angle2 * 0.5);
-	let x2 = 1 * sa2;
-	let y2 = 0 * sa2;
-	let z2 = 0 * sa2;
-	let w2 = Math.cos(angle2 * 0.5);
-	let this11 = _this.orientation;
-	let x3 = x1 * w2 + y1 * z2 - z1 * y2 + w1 * x2;
-	let y3 = -x1 * z2 + y1 * w2 + z1 * x2 + w1 * y2;
-	let z3 = x1 * y2 - y1 * x2 + z1 * w2 + w1 * z2;
-	let w3 = -x1 * x2 - y1 * y2 - z1 * z2 + w1 * w2;
-	this11.x = x * w3 + y * z3 - z * y3 + w * x3;
-	this11.y = -x * z3 + y * w3 + z * x3 + w * y3;
-	this11.z = x * y3 - y * x3 + z * w3 + w * z3;
-	this11.w = -x * x3 - y * y3 - z * z3 + w * w3;
+	let aXZ_x = sa2;
+	let aXZ_y = 0. * sa2;
+	let aXZ_z = 0. * sa2;
+	let aXZ_w = Math.cos(angle2 * 0.5);
+	let this2 = _this.orientation;
+	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
+	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
+	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
+	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
+	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
+	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
+	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
+	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
 	let a = _this.position;
 	let b = _this.target;
 	let q = _this.orientation;
@@ -1054,18 +1051,18 @@ function Main_initDevUI() {
 	let _this = options;
 	let result = new Array(_this.length);
 	let _g4 = 0;
-	let _g11 = _this.length;
-	while(_g4 < _g11) {
+	let _g5 = _this.length;
+	while(_g4 < _g5) {
 		let i = _g4++;
 		result[i] = Std.string(_this[i]);
 	}
 	let names2 = result;
 	let values2 = options;
 	let obj2 = { };
-	let _g5 = 0;
-	let _g6 = names2.length;
-	while(_g5 < _g6) {
-		let i = _g5++;
+	let _g6 = 0;
+	let _g7 = names2.length;
+	while(_g6 < _g7) {
+		let i = _g6++;
 		obj2[names2[i]] = values2[i];
 	}
 	let o6 = { };
