@@ -4,6 +4,7 @@ import rendering.BackgroundEnvironment;
 import three.PlaneGeometry;
 import three.Scene;
 import three.Uniform;
+import three.WebGLRenderer;
 import three.examples.jsm.loaders.gltfloader.GLTFLoader;
 import ui.DevUI;
 
@@ -12,34 +13,32 @@ var pixelRatio = min(window.devicePixelRatio, 2);
 
 final camera = new three.PerspectiveCamera(70, 1, 0.01, 100);
 final canvas = {
-	var _ = document.createCanvasElement();
-	_.style.position = 'absolute';
-	_.style.zIndex = '0';
-	_.style.top = '0';
-	_.style.left = '0';
-	_.style.width = '100%';
-	_.style.height = '100%';
-	_;
+	var canvas = document.createCanvasElement();
+	canvas.style.position = 'absolute';
+	canvas.style.zIndex = '0';
+	canvas.style.top = '0';
+	canvas.style.left = '0';
+	canvas.style.width = '100%';
+	canvas.style.height = '100%';
+	canvas;
 }
 
 final renderer = {
-	var _ = new three.WebGLRenderer({
+	var renderer = new WebGLRenderer({
 		canvas: canvas,
 		antialias: true,
 		powerPreference: 'high-performance',
 	});
-	_.autoClear = false;
-	_.autoClearColor = false;
-	_.autoClearDepth = false;
-	_.shadowMap.enabled = false;
-
-	_.outputEncoding = sRGBEncoding;
-	_.toneMapping = ACESFilmicToneMapping;
-
-	_.toneMappingExposure = 1.0;
-	_.physicallyCorrectLights = true;
-	_;
-}
+	renderer.autoClear = false;
+	renderer.autoClearColor = false;
+	renderer.autoClearDepth = false;
+	renderer.outputEncoding = sRGBEncoding;
+	renderer.toneMapping = ACESFilmicToneMapping;
+	renderer.toneMappingExposure = 1.0;
+	renderer.physicallyCorrectLights = true;
+	renderer.shadowMap.enabled = false;
+	renderer;
+};
 
 final gl = renderer.getContext();
 
