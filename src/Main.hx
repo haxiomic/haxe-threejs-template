@@ -27,6 +27,7 @@ final renderer = {
 	var renderer = new WebGLRenderer({
 		canvas: canvas,
 		antialias: true,
+		alpha: true,
 		powerPreference: 'high-performance',
 	});
 	renderer.autoClear = false;
