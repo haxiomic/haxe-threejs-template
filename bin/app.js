@@ -1942,7 +1942,7 @@ var Main_canvas = (function($this) {
 }(this));
 var Main_renderer = (function($this) {
 	var $r;
-	let renderer = new three_WebGLRenderer({ canvas : Main_canvas, antialias : true, powerPreference : "high-performance"});
+	let renderer = new three_WebGLRenderer({ canvas : Main_canvas, antialias : true, alpha : true, powerPreference : "high-performance"});
 	renderer.autoClear = false;
 	renderer.autoClearColor = false;
 	renderer.autoClearDepth = false;
