@@ -454,12 +454,12 @@ class control_ArcBallControl {
 control_ArcBallControl.__name__ = true;
 Math.__name__ = true;
 var three_Mesh = require("three").Mesh;
-class rendering_BackgroundEnvironment extends three_Mesh {
+class objects_BackgroundEnvironment extends three_Mesh {
 	constructor(roughness) {
 		if(roughness == null) {
 			roughness = 0.5;
 		}
-		let environmentMaterial = new rendering_EnvironmentMaterial(roughness);
+		let environmentMaterial = new objects_EnvironmentMaterial(roughness);
 		super(new three_BoxGeometry(1,1,1),environmentMaterial);
 		this.geometry.deleteAttribute("normal");
 		this.geometry.deleteAttribute("uv");
@@ -485,9 +485,9 @@ class rendering_BackgroundEnvironment extends three_Mesh {
 		};
 	}
 }
-rendering_BackgroundEnvironment.__name__ = true;
+objects_BackgroundEnvironment.__name__ = true;
 var three_ShaderMaterial = require("three").ShaderMaterial;
-class rendering_EnvironmentMaterial extends three_ShaderMaterial {
+class objects_EnvironmentMaterial extends three_ShaderMaterial {
 	constructor(roughness) {
 		let uRoughness = new three_Uniform(0.5);
 		let uFlipEnvMap = new three_Uniform(-1);
@@ -501,7 +501,7 @@ class rendering_EnvironmentMaterial extends three_ShaderMaterial {
 		uRoughness.value = roughness;
 	}
 }
-rendering_EnvironmentMaterial.__name__ = true;
+objects_EnvironmentMaterial.__name__ = true;
 var three_Uniform = require("three").Uniform;
 var three_Color = require("three").Color;
 var Three = require("three");
@@ -916,15 +916,15 @@ function Main_update(time_s,dt_s) {
 	let aXZ_y = 0. * sa2;
 	let aXZ_z = 0. * sa2;
 	let aXZ_w = Math.cos(angle2 * 0.5);
-	let this2 = _this.orientation;
+	let self = _this.orientation;
 	let rhs_x = aY_x * aXZ_w + aY_y * aXZ_z - aY_z * aXZ_y + aY_w * aXZ_x;
 	let rhs_y = -aY_x * aXZ_z + aY_y * aXZ_w + aY_z * aXZ_x + aY_w * aXZ_y;
 	let rhs_z = aY_x * aXZ_y - aY_y * aXZ_x + aY_z * aXZ_w + aY_w * aXZ_z;
 	let rhs_w = -aY_x * aXZ_x - aY_y * aXZ_y - aY_z * aXZ_z + aY_w * aXZ_w;
-	this2.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
-	this2.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
-	this2.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
-	this2.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
+	self.x = axial_x * rhs_w + axial_y * rhs_z - axial_z * rhs_y + axial_w * rhs_x;
+	self.y = -axial_x * rhs_z + axial_y * rhs_w + axial_z * rhs_x + axial_w * rhs_y;
+	self.z = axial_x * rhs_y - axial_y * rhs_x + axial_z * rhs_w + axial_w * rhs_z;
+	self.w = -axial_x * rhs_x - axial_y * rhs_y - axial_z * rhs_z + axial_w * rhs_w;
 	let a = _this.position;
 	let b = _this.target;
 	let q = _this.orientation;
@@ -1236,6 +1236,12 @@ class animation_Spring {
 		}
 		this.value = initialValue;
 		this.target = target == null ? initialValue : target;
+		this.velocity = velocity;
+		this.onUpdate = onUpdate;
+		this.onComplete = onComplete;
+		this.setStyle(style);
+	}
+	setStyle(style) {
 		switch(style._hx_index) {
 		case 0:
 			this.damping = 3.356694 / style.approxHalfLife_s;
@@ -1246,9 +1252,6 @@ class animation_Spring {
 			this.strength = style.strength;
 			break;
 		}
-		this.velocity = velocity;
-		this.onUpdate = onUpdate;
-		this.onComplete = onComplete;
 	}
 	step(dt_s) {
 		let V0 = this.velocity;
@@ -1958,7 +1961,7 @@ var Main_scene = new three_Scene();
 var Main_eventManager = new event_ViewEventManager(Main_canvas);
 var Main_arcBallControl = new control_ArcBallControl({ viewEventManager : Main_eventManager, radius : 4., dragSpeed : 4., zoomSpeed : 1.});
 var Main_uTime_s = new three_Uniform(0.0);
-var Main_background = new rendering_BackgroundEnvironment();
+var Main_background = new objects_BackgroundEnvironment();
 var Main_environmentManager = new environment_EnvironmentManager(Main_renderer,Main_scene,"assets/env/kiara_1_dawn_2k.rgbd.png",function(env) {
 });
 var Main_haxeLogoDataUrl = "data:model/gltf-binary;base64," + "Z2xURgIAAADMEgAAgAQAAEpTT057ImFzc2V0Ijp7ImdlbmVyYXRvciI6Iktocm9ub3MgZ2xURiBCbGVuZGVyIEkvTyB2MS43LjMzIiwidmVyc2lvbiI6IjIuMCJ9LCJzY2VuZSI6MCwic2NlbmVzIjpbeyJuYW1lIjoiU2NlbmUiLCJub2RlcyI6WzBdfV0sIm5vZGVzIjpbeyJtZXNoIjowLCJuYW1lIjoiSGF4ZSIsInJvdGF0aW9uIjpbLTAuNzA3MTA2ODI4Njg5NTc1MiwwLDAsMC43MDcxMDY4Mjg2ODk1NzUyXX1dLCJtYXRlcmlhbHMiOlt7ImRvdWJsZVNpZGVkIjp0cnVlLCJuYW1lIjoiTWF0ZXJpYWwiLCJwYnJNZXRhbGxpY1JvdWdobmVzcyI6eyJiYXNlQ29sb3JGYWN0b3IiOlswLjkyMTU4MjE2MjM4MDIxODUsMC4yNDIyODEwMDQ3ODY0OTE0LDAuMDEzNzAyMTE2OTA2NjQyOTE0LDFdLCJtZXRhbGxpY0ZhY3RvciI6MC44MDIyNzI3MzcwMjYyMTQ2LCJyb3VnaG5lc3NGYWN0b3IiOjAuMzk1NDU0NTU1NzQ5ODkzMn19XSwibWVzaGVzIjpbeyJuYW1lIjoiUGxhbmUiLCJwcmltaXRpdmVzIjpbeyJhdHRyaWJ1dGVzIjp7IlBPU0lUSU9OIjowLCJOT1JNQUwiOjEsIlRFWENPT1JEXzAiOjJ9LCJpbmRpY2VzIjozLCJtYXRlcmlhbCI6MH1dfV0sImFjY2Vzc29ycyI6W3siYnVmZmVyVmlldyI6MCwiY29tcG9uZW50VHlwZSI6NTEyNiwiY291bnQiOjEwNiwibWF4IjpbMSwwLjQwMjYwNTc0MjIxNjExMDIzLDFdLCJtaW4iOlstMSwtMC40MDI2MDU3NDIyMTYxMTAyMywtMV0sInR5cGUiOiJWRUMzIn0seyJidWZmZXJWaWV3IjoxLCJjb21wb25lbnRUeXBlIjo1MTI2LCJjb3VudCI6MTA2LCJ0eXBlIjoiVkVDMyJ9LHsiYnVmZmVyVmlldyI6MiwiY29tcG9uZW50VHlwZSI6NTEyNiwiY291bnQiOjEwNiwidHlwZSI6IlZFQzIifSx7ImJ1ZmZlclZpZXciOjMsImNvbXBvbmVudFR5cGUiOjUxMjMs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";
