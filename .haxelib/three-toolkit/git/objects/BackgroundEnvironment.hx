@@ -1,4 +1,4 @@
-package rendering;
+package objects;
 
 import three.Color;
 import three.BufferGeometry;

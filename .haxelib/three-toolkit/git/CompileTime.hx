@@ -49,6 +49,33 @@ class CompileTime {
 		return macro 'data:image/' + $v{mimeType} + ';base64,' + $v{Base64.encode(File.getBytes(resolvedPath))};
 	}
 
+	static public macro function embed3dModelDataUri(path: String, ?mimeType: String) {
+		var resolvedPath =  resolvePath(path);
+		Context.registerModuleDependency(Context.getLocalModule(), resolvedPath);
+		if (mimeType == null) {
+			mimeType = switch Path.extension(path).toLowerCase() {
+				case 'glb': 'model/gltf-binary';
+				case 'gltf': 'model/gltf+json';
+				case 'stl': 'model/stl';
+				case 'obj': 'model/obj';
+				case 'mtl': 'model/mtl';
+				case 'wrl' | 'wrz': 'model/vrml';
+				default: 'application/octet-stream';
+			}
+		}
+		return macro 'data:image/' + $v{mimeType} + ';base64,' + $v{Base64.encode(File.getBytes(resolvedPath))};
+	}
+
+	static public macro function embedJson(path:String) {
+		var resolvedPath =  resolvePath(path);
+		return try {
+			var json = haxe.Json.parse(sys.io.File.getContent(resolvedPath));
+			macro $v{json};
+		} catch (e) {
+			haxe.macro.Context.error('Failed to load json: $e', haxe.macro.Context.currentPos());
+		}
+	}
+
 	static public macro function getPathsInDirectory(directoryPath: String, ?matching: ExprOf<EReg>) {
 		var resolvedPath =  resolvePath(directoryPath);
 		var filenames = sys.FileSystem.readDirectory(resolvedPath);

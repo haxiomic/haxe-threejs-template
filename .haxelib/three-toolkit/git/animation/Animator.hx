@@ -74,8 +74,18 @@ class Animator {
 		return spring;
 	}
 
+	/**
+	 * Add a temporary spring that will be removed when the target is reached
+	 * @param spring 
+	 */
+	public inline function addTemporarySpring(spring: Spring) {
+		temporarySprings.push(spring);
+		return spring;
+	}
+
 	public inline function removeSpring(spring: Spring) {
 		springs.remove(spring);
+		temporarySprings.remove(spring);
 	}
 
 	public inline function createSpring(
@@ -116,6 +126,7 @@ class Animator {
 #else // if macro
 
 import haxe.macro.Expr;
+import haxe.macro.Context;
 
 class Animator {
 
@@ -177,6 +188,75 @@ class Animator {
 		};
 	}
 
+}
+
+function getExpressionUniqueRef(expr: Expr): Null<{
+	parentObjectExpr: Expr,
+	idExpr: Expr,
+}> {
+	return switch expr.expr {
+		// well defined
+		case EField(e, field):
+		{
+			parentObjectExpr: e,
+			idExpr: macro $v{field}
+		}
+
+		case EArray(array, index):
+		{
+			parentObjectExpr: array,
+			idExpr: macro Std.string($index),
+		}
+
+		case EConst(CIdent(ident)):
+			// we need to determine where ident is stored;
+			// if it's a local variable we can get a unique id from the compiler
+			// it could be a member variable or a static variable imported from some module
+			// how can we determine? Do we support imports?
+			var localVars = Context.getLocalTVars();
+			if (localVars.exists(ident)) {
+				{
+					parentObjectExpr: macro null,
+					idExpr: macro $v{Std.string(localVars.get(ident).id)},
+				}
+			} else {
+				var localClass = Context.getLocalClass();
+				if (localClass != null) {
+					var localClass = localClass.get();
+					if (Lambda.exists(localClass.fields.get(), field -> field.name == ident)) {
+						{
+							parentObjectExpr: macro this,
+							idExpr: macro $v{ident},
+						}
+					} else if (Lambda.exists(localClass.fields.get(), field -> field.name == ident)) {
+						var localClassName = localClass.name;
+						{
+							parentObjectExpr: macro $v{localClassName},
+							idExpr: macro $v{ident},
+						}
+					} else {
+						// could search imports...
+						// that gets complex
+						Context.warning('Imported variables are not fully supported, try an object field or local variable', expr.pos);
+						null;
+					}
+				} else {
+					Context.warning('Animator cannot determine a unique reference for this variable, try an object field or local variable', expr.pos);
+					null;
+				}
+			}
+
+		// anonymous - no unique ref but no problem
+		case EObjectDecl(fields): null;
+
+		// unwrapping
+		case EParenthesis(e): getExpressionUniqueRef(e);
+		case ECheckType(e, t): getExpressionUniqueRef(e);
+
+		default:
+			Context.warning('Animator cannot determine a unique reference for this variable, try an object field or local variable', expr.pos);
+			null;
+	}
 }
 
 #end

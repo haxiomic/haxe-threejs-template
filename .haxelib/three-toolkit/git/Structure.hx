@@ -85,17 +85,29 @@ function extendAny<T>(base: T, extendWidth: Any): T {
 
 /**
  * Copy fields from a structure or class to any other instance
+ * 
+ * Only copies fields that exist on both type, other fields are ignored
  * @param from 
  * @param to 
  * @param options pass {excludes: [fields]} to exclude specific fields
  */
-macro function copyFields(from: Expr, to: Expr, ?options: {exclude: Array<String>}) {
-	var fieldNames =
-		getPublicReadableFields(Context.typeof(from), from.pos)
+macro function copyMatchingFields(from: Expr, to: Expr, ?options: {exclude: Array<String>}) {
+	var fromFieldNames = getPublicReadableFields(Context.typeof(from), from.pos)
 		.map(f -> f.name);
+	var toFieldNames =
+		getPublicWritableFields(Context.typeof(to), to.pos)
+		.map(f -> f.name);
+	// find intersection of the two arrays
+	var fieldNames = new Array();
+	for (field in fromFieldNames) {
+		if (toFieldNames.contains(field)) {
+			fieldNames.push(field);
+		}
+	}
 	if (options != null) {
 		fieldNames = fieldNames.filter(f -> !options.exclude.contains(f));
 	}
+
 	var exprs = [
 		for (name in fieldNames) {
 			macro to.$name = from.$name;
@@ -216,7 +228,8 @@ function getFields(type: haxe.macro.Type, pos: Position) {
 		case TInst(_.get() => classType, _):
 			getAllClassFields(classType);
 		case TAbstract(_.get() => abst, _):
-			abst.impl.get().fields.get();
+			abst.impl.get().statics.get();
+			// abst.impl.get().fields.get();
 		case TMono(_) | TDynamic(_):
 			[];
 		case TLazy(f): getFields(f(), pos);

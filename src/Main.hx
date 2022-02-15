@@ -1,6 +1,6 @@
 import event.ViewEventManager;
 import environment.EnvironmentManager;
-import rendering.BackgroundEnvironment;
+import objects.BackgroundEnvironment;
 import three.PlaneGeometry;
 import three.Scene;
 import three.Uniform;

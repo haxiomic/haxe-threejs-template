@@ -31,6 +31,14 @@ class Spring {
 
 		this.value = initialValue;
 		this.target = target == null ? initialValue : target;
+		this.velocity = velocity;
+		this.onUpdate = onUpdate;
+		this.onComplete = onComplete;
+
+		this.setStyle(style);
+	}
+
+	public function setStyle(style: SpringStyle) {
 		switch style {
 			case Critical(approxHalfLife_s):
 				this.damping = 3.356694 / approxHalfLife_s;
@@ -39,9 +47,6 @@ class Spring {
 				this.damping = damping;
 				this.strength = strength;
 		}
-		this.velocity = velocity;
-		this.onUpdate = onUpdate;
-		this.onComplete = onComplete;
 	}
 
 	public function step(dt_s: Float) {

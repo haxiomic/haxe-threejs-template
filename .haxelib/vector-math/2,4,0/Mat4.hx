@@ -20,6 +20,18 @@ abstract Mat4(Mat4Data) from Mat4Data to Mat4Data {
 			a30, a31, a32, a33
 		);
 	}
+
+	public inline function set(
+		a00: Float, a01: Float, a02: Float, a03: Float,
+		a10: Float, a11: Float, a12: Float, a13: Float,
+		a20: Float, a21: Float, a22: Float, a23: Float,
+		a30: Float, a31: Float, a32: Float, a33: Float
+	) {
+		this.c0.set(a00, a01, a02, a03);
+		this.c1.set(a10, a11, a12, a13);
+		this.c2.set(a20, a21, a22, a23);
+		this.c3.set(a30, a31, a32, a33);
+	}
 	
 	public inline function copyFrom(v: Mat4) {
 		var v: Mat4Data = v;
@@ -163,10 +175,10 @@ abstract Mat4(Mat4Data) from Mat4Data to Mat4Data {
 	@:op([])
 	inline function arrayRead(i: Int)
 		return switch i {
-			case 0: this.c0.clone();
-			case 1: this.c1.clone();
-			case 2: this.c2.clone();
-			case 3: this.c3.clone();
+			case 0: this.c0;
+			case 1: this.c1;
+			case 2: this.c2;
+			case 3: this.c3;
 			default: null;
 		}
 
@@ -418,7 +430,7 @@ abstract Mat4(Mat4Data) from Mat4Data to Mat4Data {
 	**/
 	@:overload(function<T>(arrayLike: T, index: Int): T {})
 	public macro function copyIntoArray(self: haxe.macro.Expr.ExprOf<Mat4>, array: haxe.macro.Expr.ExprOf<ArrayAccess<Float>>, index: haxe.macro.Expr.ExprOf<Int>) {
-		return macro  {
+		return macro {
 			var self = $self;
 			var array = $array;
 			var i: Int = $index;
@@ -427,6 +439,39 @@ abstract Mat4(Mat4Data) from Mat4Data to Mat4Data {
 			self[2].copyIntoArray(array, i + 8);
 			self[3].copyIntoArray(array, i + 12);
 			array;
+		}
+	}
+
+	/**
+		Copies matrix elements in column-major order from a type that supports array-read access
+	**/
+	@:overload(function<T>(arrayLike: T, index: Int): Mat4 {})
+	public macro function copyFromArray(self: haxe.macro.Expr.ExprOf<Mat4>, array: haxe.macro.Expr.ExprOf<ArrayAccess<Float>>, index: haxe.macro.Expr.ExprOf<Int>) {
+		return macro {
+			var self = $self;
+			var array = $array;
+			var i: Int = $index;
+			self[0].copyFromArray(array, i);
+			self[1].copyFromArray(array, i + 4);
+			self[2].copyFromArray(array, i + 8);
+			self[3].copyFromArray(array, i + 12);
+			self;
+		}
+	}
+
+	// static macros
+
+	@:overload(function<T>(arrayLike: T, index: Int): T {})
+	public static macro function fromArray(array: ExprOf<ArrayAccess<Float>>, index: ExprOf<Int>): ExprOf<Mat4> {
+		return macro {
+			var array = $array;
+			var i = $index;
+			new Mat4(
+				array[0 + i], array[1 + i], array[2 + i], array[3 + i],
+				array[4 + i], array[5 + i], array[6 + i], array[7 + i],
+				array[8 + i], array[9 + i], array[10 + i], array[11 + i],
+				array[12 + i], array[13 + i], array[14 + i], array[15 + i]
+			);
 		}
 	}
 

@@ -12,10 +12,11 @@ class Watchable<T> {
 	public inline function watch(cb: (v: T) -> Void) {
 		callbacks.push(cb);
 		cb(value);
+		return { unwatch: () -> unwatch(cb) };
 	}
 
 	public inline function unwatch(cb: (v: T) -> Void) {
-		callbacks.remove(cb);
+		return callbacks.remove(cb);
 	}
 
 	inline function set_value(v: T) {

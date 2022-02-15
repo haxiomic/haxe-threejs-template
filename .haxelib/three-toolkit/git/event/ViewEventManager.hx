@@ -314,7 +314,7 @@ class ViewEventManager {
 			var existingPointer = activePointers.get(e.pointerId);
 			if (existingPointer != null) {
 				// copy state
-				Structure.copyFields(e, existingPointer, {exclude: ['pointerId', 'pointerType', 'isPrimary', 'button', 'preventDefault', 'defaultPrevented', 'nativeEvent', 'timeStamp', 'onTargetView']});
+				Structure.copyMatchingFields(e, existingPointer, {exclude: ['pointerId', 'pointerType', 'isPrimary', 'button', 'preventDefault', 'defaultPrevented', 'nativeEvent', 'timeStamp', 'onTargetView']});
 			} else {
 				// add new state
 				activePointers.set(e.pointerId, {

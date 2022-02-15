@@ -713,6 +713,104 @@ function main() {
 	var result = pos.xy += 0.5;
 	test(result == vec2(0.5));
 
+	// test conversions to/from different vector objects
+	test(Vec2.from({x: 1, y: 2}) == vec2(1, 2));
+	test(Vec3.from({x: 1, y: 2, z: 3}) == vec3(1, 2, 3));
+	test(Vec4.from({x: 1, y: 2, z: 3, w: 4}) == vec4(1, 2, 3, 4));
+
+	test(Vec2.fromArray([0.,0.,0.,1.,2.,0.,0.], 3) == vec2(1, 2));
+	test(Vec3.fromArray([0.,0.,0.,1.,2.,3.,0.], 3) == vec3(1, 2, 3));
+	test(Vec4.fromArray([0.,0.,0.,1.,2.,3.,4.], 3) == vec4(1, 2, 3, 4));
+
+	test(vec2(0).copyFrom({x: 1, y: 2}) == vec2(1, 2));
+	test(vec3(0).copyFrom({x: 1, y: 2, z: 3}) == vec3(1, 2, 3));
+	test(vec4(0).copyFrom({x: 1, y: 2, z: 3, w: 4}) == vec4(1, 2, 3, 4));
+
+	test(vec2(0).copyFromArray([0.,0.,0.,1.,2.,0.,0.], 3) == vec2(1, 2));
+	test(vec3(0).copyFromArray([0.,0.,0.,1.,2.,3.,0.], 3) == vec3(1, 2, 3));
+	test(vec4(0).copyFromArray([0.,0.,0.,1.,2.,3.,4.], 3) == vec4(1, 2, 3, 4));
+
+	var v = vec4(0);
+	v.copyFromArray([1,2,3,4],0);
+	test(v == vec4(1,2,3,4));
+
+	test(switch vec2(1, 2).copyInto({x:0.,y:0.}) {case {x:1.,y:2.}: true; default: false;});
+	test(switch vec3(1, 2, 3).copyInto({x:0.,y:0.,z:0.}) {case {x:1.,y:2.,z:3.}: true; default: false;});
+	test(switch vec4(1, 2, 3, 4).copyInto({x:0.,y:0.,z:0.,w:0.}) {case {x:1.,y:2.,z:3.,w:4.}: true; default: false;});
+
+	test(switch vec2(1, 2).copyIntoArray([0.,0.,0.,0.,0.,0.,0.], 3) {case [0.,0.,0.,1.,2.,0.,0.]: true; default: false;});
+	test(switch vec3(1, 2, 3).copyIntoArray([0.,0.,0.,0.,0.,0.,0.], 3) {case [0.,0.,0.,1.,2.,3.,0.]: true; default: false;});
+	test(switch vec4(1, 2, 3, 4).copyIntoArray([0.,0.,0.,0.,0.,0.,0.], 3) {case [0.,0.,0.,1.,2.,3.,4.]: true; default: false;});
+
+	// test matrix / array conversions
+	// - mat2
+	var m = mat2(0);
+	m[0].copyFromArray([1,2], 0);
+	test(m[0] == vec2(1,2));
+	test(
+		Mat2.fromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat2(
+			1, 2,
+			3, 4
+		)
+	);
+	test(
+		mat2(0).copyFromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat2(
+			1, 2,
+			3, 4
+		)
+	);
+	// - mat3
+	var m = mat3(0);
+	m[0].copyFromArray([1,2,3], 0);
+	test(m[0] == vec3(1,2,3));
+	test(
+		Mat3.fromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat3(
+			1, 2, 3,
+			4, 5, 6,
+			7, 8, 9
+		)
+	);
+	test(
+		mat3(0).copyFromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat3(
+			1, 2, 3,
+			4, 5, 6,
+			7, 8, 9
+		)
+	);
+	// - mat4
+	var m = mat4(0);
+	m[0].copyFromArray([1,2,3,4], 0);
+	test(m[0] == vec4(1,2,3,4));
+	test(
+		Mat4.fromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat4(
+			 1, 2, 3, 4,
+			 5, 6, 7, 8,
+			 9,10,11,12,
+			13,14,15,16
+		)
+	);
+	test(
+		mat4(0).copyFromArray([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], 3)
+		==
+		mat4(
+			1, 2, 3, 4,
+			5, 6, 7, 8,
+			9,10,11,12,
+			13,14,15,16
+		)
+	);
+	
+
 	testsComplete();
 }
 

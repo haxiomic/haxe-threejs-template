@@ -27,6 +27,11 @@ abstract Quat(Vec4) to Vec4 from Vec4 {
 			+ 2 * s * u.cross(v);
 	}
 
+	// assignment overload should come before other binary ops to ensure they have priority
+	@:op(a *= b)
+	static inline function mulEq(a: Quat, b: Quat): Quat
+		return a.copyFrom(mul(a, b));
+
 	@:op(a * b)
 	static inline function mul(lhs: Quat, rhs: Quat): Quat {
 		return new Quat(
@@ -45,6 +50,13 @@ abstract Quat(Vec4) to Vec4 from Vec4 {
 			axis.z * sa,
 			Math.cos(angle * 0.5)
 		);
+	}
+
+	/**
+	 * Quaternion representing no rotation
+	 */
+	static public inline function unitQuaternion(): Quat {
+		return new Quat(0, 0, 0, 1);
 	}
 
 }
