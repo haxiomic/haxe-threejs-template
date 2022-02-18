@@ -156,7 +156,6 @@ function initDevUI() {
 		g.add(pixelRatio, 0.1, 4).name('resolution');
 		g.add(camera.fov, 1, 200).onChange(_ -> camera.updateProjectionMatrix());
 
-		var renderer = renderer;
 		g.add(renderer.toneMapping).onChange(v -> {
 			// little three.js workaround: force shader rebuild: change encoding for 1 frame
 			var outputEncoding = renderer.outputEncoding;
